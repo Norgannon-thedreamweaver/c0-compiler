@@ -1,3 +1,3 @@
-# miniplc0-java
+# c0-compiler-java
 
-这里是 miniplc0 实验的 Java 版本。
+这里是基于 miniplc0 实现的c0编译器的 Java 版本。
