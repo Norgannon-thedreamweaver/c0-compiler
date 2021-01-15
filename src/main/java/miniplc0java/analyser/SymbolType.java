@@ -1,20 +1,21 @@
 package miniplc0java.analyser;
 
 public enum SymbolType {
-    Int,
-    Double,
-    Void;
+    FN,
+    CONST,
+    LET;
+
     @Override
     public String toString() {
         switch (this) {
-            case Int:
-                return "int";
-            case Double:
-                return "double";
-            case Void:
-                return "void";
+            case FN:
+                return "fn";
+            case CONST:
+                return "const";
+            case LET:
+                return "let";
             default:
-                return "invalidType";
+                return "invalid SymbolType";
         }
     }
 }

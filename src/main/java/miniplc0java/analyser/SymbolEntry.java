@@ -1,60 +1,159 @@
 package miniplc0java.analyser;
 
+import miniplc0java.instruction.Instruction;
+
+import java.util.ArrayList;
+
 public class SymbolEntry {
-    boolean isConstant;
+    String name;
+    Object value;
+
     boolean isInitialized;
-    int stackOffset;
+    long stackOffset;
+    SymbolType symbolType;
+    IdentType identType;
 
-    /**
-     * @param isConstant
-     * @param isDeclared
-     * @param stackOffset
-     */
-    public SymbolEntry(boolean isConstant, boolean isDeclared, int stackOffset) {
-        this.isConstant = isConstant;
-        this.isInitialized = isDeclared;
+    boolean isParam;
+    int param_cnt;
+    SymbolTable paramTable;
+    SymbolTable localTable;
+
+    ArrayList<Instruction> instructions;
+
+    public SymbolEntry(int stackOffset){
+        this.name=null;
+        this.value=null;
+        this.isInitialized = false;
         this.stackOffset = stackOffset;
+        this.symbolType=null;
+        this.identType=null;
+        this.isParam = false;
+        this.param_cnt=0;
+        this.paramTable = null;
+        this.localTable =null;
+        this.instructions=null;
     }
 
-    /**
-     * @return the stackOffset
-     */
-    public int getStackOffset() {
-        return stackOffset;
+    public SymbolEntry(String name,Object value,boolean isInitialized,long stackOffset,SymbolType symbolType,
+                       IdentType identType,boolean isParam,int param_cnt,SymbolTable paramTable,
+                       SymbolTable localTable,ArrayList<Instruction> instructions){
+        this.name=name;
+        this.value=value;
+        this.isInitialized = isInitialized;
+        this.stackOffset = stackOffset;
+        this.symbolType=symbolType;
+        this.identType=identType;
+        this.isParam = isParam;
+        this.param_cnt=param_cnt;
+        this.paramTable = paramTable;
+        this.localTable =localTable;
+        this.instructions=instructions;
     }
 
-    /**
-     * @return the isConstant
-     */
-    public boolean isConstant() {
-        return isConstant;
+    public SymbolEntry(String name,Object value,boolean isInitialized,long stackOffset,SymbolType symbolType,IdentType identType){
+        this.name=name;
+        this.value=value;
+        this.isInitialized = isInitialized;
+        this.stackOffset = stackOffset;
+        this.symbolType=symbolType;
+        this.identType=identType;
+        this.isParam = false;
+        this.param_cnt=0;
+        this.paramTable = null;
+        this.localTable =null;
+        this.instructions=null;
     }
 
-    /**
-     * @return the isInitialized
-     */
+    public boolean isConstant(){
+        return this.symbolType == SymbolType.CONST;
+    }
+
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public Object getValue() {
+        return value;
+    }
+
+    public void setValue(Object value) {
+        this.value = value;
+    }
+
     public boolean isInitialized() {
         return isInitialized;
     }
 
-    /**
-     * @param isConstant the isConstant to set
-     */
-    public void setConstant(boolean isConstant) {
-        this.isConstant = isConstant;
+    public void setInitialized(boolean initialized) {
+        isInitialized = initialized;
     }
 
-    /**
-     * @param isInitialized the isInitialized to set
-     */
-    public void setInitialized(boolean isInitialized) {
-        this.isInitialized = isInitialized;
+    public long getStackOffset() {
+        return stackOffset;
     }
 
-    /**
-     * @param stackOffset the stackOffset to set
-     */
-    public void setStackOffset(int stackOffset) {
+    public void setStackOffset(long stackOffset) {
         this.stackOffset = stackOffset;
+    }
+
+    public SymbolType getSymbolType() {
+        return symbolType;
+    }
+
+    public void setSymbolType(SymbolType symbolType) {
+        this.symbolType = symbolType;
+    }
+
+    public IdentType getIdentType() {
+        return identType;
+    }
+
+    public void setIdentType(IdentType identType) {
+        this.identType = identType;
+    }
+
+    public boolean isParam() {
+        return isParam;
+    }
+
+    public void setParam(boolean param) {
+        isParam = param;
+    }
+
+    public int getParam_cnt() {
+        return param_cnt;
+    }
+
+    public void setParam_cnt(int param_cnt) {
+        this.param_cnt = param_cnt;
+    }
+
+    public SymbolTable getParamTable() {
+        return paramTable;
+    }
+
+    public void setParamTable(SymbolTable paramTable) {
+        this.paramTable = paramTable;
+    }
+
+    public SymbolTable getLocalTable() {
+        return localTable;
+    }
+
+    public void setLocalTable(SymbolTable localTable) {
+        this.localTable = localTable;
+    }
+
+    public ArrayList<Instruction> getInstructions() {
+        return instructions;
+    }
+
+    public void setInstructions(ArrayList<Instruction> instructions) {
+        this.instructions = instructions;
     }
 }

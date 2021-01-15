@@ -24,23 +24,28 @@ public class Tokenizer {
 
         // 跳过之前的所有空白字符
         skipSpaceCharacters();
+        Token ret;
 
         if (it.isEOF()) {
-            return new Token(TokenType.EOF, "", it.currentPos(), it.currentPos());
+            ret= new Token(TokenType.EOF, "", it.currentPos(), it.currentPos());
         }
 
         char peek = it.peekChar();
         if (Character.isDigit(peek)) {
-            return lexNumber();
+            ret= lexNumber();
         } else if (Character.isAlphabetic(peek)|| peek=='_') {
-            return lexIdentOrKeyword();
+            ret= lexIdentOrKeyword();
         } else if(peek=='\''){
-            return lexChar();
+            ret= lexChar();
         } else if(peek=='\"'){
-            return lexString();
+            ret= lexString();
         } else {
-            return lexOperatorOrUnknown();
+            ret= lexOperatorOrUnknown();
         }
+
+        if(ret.getTokenType()==TokenType.COMMENT)
+            return nextToken();
+        return ret;
     }
 
     private Token lexNumber() throws TokenizeError {
@@ -185,7 +190,7 @@ public class Tokenizer {
         else if(peek!='\'' && peek!='\n' && peek!='\t' && peek!='\r'){
             char c=it.nextChar();
             if(it.nextChar()=='\'')
-                return new Token(TokenType.CHAR_LITERAL, c, start, it.currentPos());
+                return new Token(TokenType.CHAR_LITERAL, (long)c, start, it.currentPos());
             throw new TokenizeError(ErrorCode.InvalidInput, start);
         }
         throw new TokenizeError(ErrorCode.InvalidInput, start);

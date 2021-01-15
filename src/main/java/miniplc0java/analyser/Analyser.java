@@ -19,23 +19,34 @@ public final class Analyser {
     Tokenizer tokenizer;
     ArrayList<Instruction> instructions;
 
+    public SymbolTable funcTable=new SymbolTable(0);
+    public SymbolTable globalTable=new SymbolTable(0);
+    private SymbolTable paraTable =null;
+
+    public SymbolEntry _start=null;
+    public SymbolEntry main=null;
     /** 当前偷看的 token */
     Token peekedToken = null;
 
-    /** 符号表 */
-    HashMap<String, SymbolEntry> symbolTable = new HashMap<>();
-
-    /** 下一个变量的栈偏移 */
-    int nextOffset = 0;
-
-    public Analyser(Tokenizer tokenizer) {
+    public Analyser(Tokenizer tokenizer) throws AnalyzeError {
         this.tokenizer = tokenizer;
         this.instructions = new ArrayList<>();
+        this._start=new SymbolEntry(null,null,false,funcTable.getNextVariableOffset(),
+                SymbolType.FN,IdentType.VOID,false,0,null,null,this.instructions);
+        funcTable.addSymbol(_start,null);
+
+        funcTable.addSymbol(new SymbolEntry("getint","getint",true,funcTable.getNextVariableOffset(),SymbolType.FN,IdentType.INT),null);
+        funcTable.addSymbol(new SymbolEntry("getdouble","getdouble",true,funcTable.getNextVariableOffset(),SymbolType.FN,IdentType.DOUBLE),null);
+        funcTable.addSymbol(new SymbolEntry("getchar","getchar",true,funcTable.getNextVariableOffset(),SymbolType.FN,IdentType.INT),null);
+        funcTable.addSymbol(new SymbolEntry("putint","putint",true,funcTable.getNextVariableOffset(),SymbolType.FN,IdentType.VOID),null);
+        funcTable.addSymbol(new SymbolEntry("putdouble","putdouble",true,funcTable.getNextVariableOffset(),SymbolType.FN,IdentType.VOID),null);
+        funcTable.addSymbol(new SymbolEntry("putchar","putchar",true,funcTable.getNextVariableOffset(),SymbolType.FN,IdentType.VOID),null);
+        funcTable.addSymbol(new SymbolEntry("putstr","putstr",true,funcTable.getNextVariableOffset(),SymbolType.FN,IdentType.VOID),null);
+        funcTable.addSymbol(new SymbolEntry("putln","putln",true,funcTable.getNextVariableOffset(),SymbolType.FN,IdentType.VOID),null);
     }
 
-    public List<Instruction> analyse() throws CompileError {
+    public void analyse() throws CompileError {
         analyseProgram();
-        return instructions;
     }
 
     /**
@@ -111,323 +122,733 @@ public final class Analyser {
         }
     }
 
-    /**
-     * 获取下一个变量的栈偏移
-     * 
-     * @return
-     */
-    private int getNextVariableOffset() {
-        return this.nextOffset++;
-    }
-
-    /**
-     * 添加一个符号
-     * 
-     * @param name          名字
-     * @param isInitialized 是否已赋值
-     * @param isConstant    是否是常量
-     * @param curPos        当前 token 的位置（报错用）
-     * @throws AnalyzeError 如果重复定义了则抛异常
-     */
-    private void addSymbol(String name, boolean isInitialized, boolean isConstant, Pos curPos) throws AnalyzeError {
-        if (this.symbolTable.get(name) != null) {
-            throw new AnalyzeError(ErrorCode.DuplicateDeclaration, curPos);
-        } else {
-            this.symbolTable.put(name, new SymbolEntry(isConstant, isInitialized, getNextVariableOffset()));
-        }
-    }
-
-    /**
-     * 设置符号为已赋值
-     * 
-     * @param name   符号名称
-     * @param curPos 当前位置（报错用）
-     * @throws AnalyzeError 如果未定义则抛异常
-     */
-    private void initializeSymbol(String name, Pos curPos) throws AnalyzeError {
-        var entry = this.symbolTable.get(name);
-        if (entry == null) {
-            throw new AnalyzeError(ErrorCode.NotDeclared, curPos);
-        } else {
-            entry.setInitialized(true);
-        }
-    }
-
-    /**
-     * 获取变量在栈上的偏移
-     * 
-     * @param name   符号名
-     * @param curPos 当前位置（报错用）
-     * @return 栈偏移
-     * @throws AnalyzeError
-     */
-    private int getOffset(String name, Pos curPos) throws AnalyzeError {
-        var entry = this.symbolTable.get(name);
-        if (entry == null) {
-            throw new AnalyzeError(ErrorCode.NotDeclared, curPos);
-        } else {
-            return entry.getStackOffset();
-        }
-    }
-
-    /**
-     * 获取变量是否是常量
-     * 
-     * @param name   符号名
-     * @param curPos 当前位置（报错用）
-     * @return 是否为常量
-     * @throws AnalyzeError
-     */
-    private boolean isConstant(String name, Pos curPos) throws AnalyzeError {
-        var entry = this.symbolTable.get(name);
-        if (entry == null) {
-            throw new AnalyzeError(ErrorCode.NotDeclared, curPos);
-        } else {
-            return entry.isConstant();
-        }
-    }
-
     private void analyseProgram() throws CompileError {
-        // 程序 -> 'begin' 主过程 'end'
-        // 示例函数，示例如何调用子程序
-        // 'begin'
-
+        analyseMain();
         expect(TokenType.EOF);
     }
 
     private void analyseMain() throws CompileError {
-        // 主过程 -> 常量声明 变量声明 语句序列
-        throw new Error("Not implemented");
-    }
-
-    private void analyseConstantDeclaration() throws CompileError {
-        // 示例函数，示例如何解析常量声明
-        // 常量声明 -> 常量声明语句*
-
-        // 如果下一个 token 是 const 就继续
-        while (nextIf(TokenType.Const) != null) {
-            // 常量声明语句 -> 'const' 变量名 '=' 常表达式 ';'
-
-            // 变量名
-            var nameToken = expect(TokenType.Ident);
-
-            // 加入符号表
-            String name = (String) nameToken.getValue();
-            addSymbol(name, true, true, nameToken.getStartPos());
-
-            // 等于号
-            expect(TokenType.Equal);
-
-            // 常表达式
-            var value = analyseConstantExpression();
-
-            // 分号
-            expect(TokenType.Semicolon);
-
-            // 这里把常量值直接放进栈里，位置和符号表记录的一样。
-            // 更高级的程序还可以把常量的值记录下来，遇到相应的变量直接替换成这个常数值，
-            // 我们这里就先不这么干了。
-            instructions.add(new Instruction(Operation.LIT, value));
-        }
-    }
-
-    private void analyseVariableDeclaration() throws CompileError {
-        // 变量声明 -> 变量声明语句*
-
-        // 如果下一个 token 是 var 就继续
-        while (nextIf(TokenType.Var) != null) {
-            // 变量声明语句 -> 'var' 变量名 ('=' 表达式)? ';'
-
-            // 变量名
-
-            // 变量初始化了吗
-            boolean initialized = false;
-
-            // 下个 token 是等于号吗？如果是的话分析初始化
-
-            // 分析初始化的表达式
-
-            // 分号
-            expect(TokenType.Semicolon);
-
-            // 加入符号表，请填写名字和当前位置（报错用）
-            String name = /* 名字 */ null;
-            addSymbol(name, false, false, /* 当前位置 */ null);
-
-            // 如果没有初始化的话在栈里推入一个初始值
-            if (!initialized) {
-                instructions.add(new Instruction(Operation.LIT, 0));
+        while(true){
+            if(check(TokenType.CONST_KW)||check(TokenType.LET_KW)){
+                analyseDeclaration(this._start,globalTable);
             }
-        }
-    }
-
-    private void analyseStatementSequence() throws CompileError {
-        // 语句序列 -> 语句*
-        // 语句 -> 赋值语句 | 输出语句 | 空语句
-
-        while (true) {
-            // 如果下一个 token 是……
-            var peeked = peek();
-            if (peeked.getTokenType() == TokenType.Ident) {
-                // 调用相应的分析函数
-                // 如果遇到其他非终结符的 FIRST 集呢？
-            } else {
-                // 都不是，摸了
+            else if(check(TokenType.FN_KW)){
+                analyseFunction();
+            }
+            else
                 break;
+        }
+    }
+    private void analyseDeclaration(SymbolEntry cur_func,SymbolTable varTable) throws CompileError{
+        if(check(TokenType.CONST_KW)){
+            analyseConstDeclaration(cur_func,varTable);
+        }
+        else if(check(TokenType.LET_KW)){
+            analyseLetDeclaration(cur_func,varTable);
+        }
+        else{
+            throw new ExpectedTokenError(List.of(TokenType.CONST_KW,TokenType.LET_KW), next());
+        }
+
+    }
+    private void analyseConstDeclaration(SymbolEntry cur_func,SymbolTable varTable) throws CompileError {
+        expect(TokenType.CONST_KW);
+        Token name=expect(TokenType.IDENT);
+        IdentType type;
+        expect(TokenType.COLON);
+
+        if(expect(TokenType.IDENT).getValue().toString().equals("int")){
+            type=IdentType.INT;
+        }
+        else if(expect(TokenType.IDENT).getValue().toString().equals("double")){
+            type=IdentType.DOUBLE;
+        }
+        else{
+            throw new AnalyzeError(ErrorCode.ExpectTY, peekedToken.getStartPos());
+        }
+        expect(TokenType.ASSIGN);
+
+        SymbolEntry symbol=new SymbolEntry(name.getValue().toString(),0L,true,varTable.getNextVariableOffset(),SymbolType.CONST,type);
+        if(!cur_func.getLocalTable().equals(varTable)){
+            cur_func.getLocalTable().getNextVariableOffset();
+        }
+        if(varTable.isStart()){
+            cur_func.getInstructions().add(new Instruction(Operation.GLOBA,symbol.getStackOffset()));
+        }
+        else{
+            cur_func.getInstructions().add(new Instruction(Operation.LOCA,symbol.getStackOffset()));
+        }
+
+        IdentType expressionType=analyseExpression(cur_func,varTable);
+        if(expressionType!=type){
+            throw new AnalyzeError(ErrorCode.InvalidType,name.getStartPos());
+        }
+        cur_func.getInstructions().add(new Instruction(Operation.STORE_64));
+        expect(TokenType.SEMICOLON);
+
+        varTable.addSymbol(cur_func,symbol,name.getStartPos());
+    }
+    private void analyseLetDeclaration(SymbolEntry cur_func,SymbolTable varTable) throws CompileError {
+        expect(TokenType.LET_KW);
+        Token name=expect(TokenType.IDENT);
+        IdentType type;
+        expect(TokenType.COLON);
+
+        if(check(TokenType.IDENT) && expect(TokenType.IDENT).getValue().toString().equals("int")){
+            type=IdentType.INT;
+        }
+        else if(check(TokenType.IDENT) && expect(TokenType.IDENT).getValue().toString().equals("double")){
+            type=IdentType.DOUBLE;
+        }
+        else{
+            throw new AnalyzeError(ErrorCode.ExpectTY, peekedToken.getStartPos());
+        }
+        SymbolEntry symbol=new SymbolEntry(name.getValue().toString(),0L,false,varTable.getNextVariableOffset(),SymbolType.LET,type);
+        if(!cur_func.getLocalTable().equals(varTable)){
+            cur_func.getLocalTable().getNextVariableOffset();
+        }
+
+        if(check(TokenType.ASSIGN)){
+            expect(TokenType.ASSIGN);
+            symbol.setInitialized(true);
+            if(varTable.isStart()){
+                cur_func.getInstructions().add(new Instruction(Operation.GLOBA,symbol.getStackOffset()));
             }
+            else{
+                cur_func.getInstructions().add(new Instruction(Operation.LOCA,symbol.getStackOffset()));
+            }
+
+            IdentType expressionType=analyseExpression(cur_func,varTable);
+            if(expressionType!=type){
+                throw new AnalyzeError(ErrorCode.InvalidType,name.getStartPos());
+            }
+            cur_func.getInstructions().add(new Instruction(Operation.STORE_64));
         }
-        throw new Error("Not implemented");
+        expect(TokenType.SEMICOLON);
+        varTable.addSymbol(cur_func,symbol,name.getStartPos());
     }
 
-    private int analyseConstantExpression() throws CompileError {
-        // 常表达式 -> 符号? 无符号整数
-        boolean negative = false;
-        if (nextIf(TokenType.Plus) != null) {
-            negative = false;
-        } else if (nextIf(TokenType.Minus) != null) {
-            negative = true;
+    private void analyseFunction() throws CompileError {
+        SymbolEntry symbol=new SymbolEntry(funcTable.getNextVariableOffset());
+        symbol.setSymbolType(SymbolType.FN);
+        symbol.setInitialized(true);
+
+        ArrayList<Instruction> cur_instructions=new ArrayList<>();
+        symbol.setInstructions(cur_instructions);
+
+
+        SymbolTable paramTable=new SymbolTable(0);
+        symbol.setParamTable(paramTable);
+        paramTable.setLastTable(globalTable);
+
+        SymbolTable localTable=new SymbolTable(0);
+        symbol.setLocalTable(localTable);
+        localTable.setLastTable(paramTable);
+
+        expect(TokenType.FN_KW);
+        var name = expect(TokenType.IDENT);
+        symbol.setName(name.getValue().toString());
+        IdentType type;
+
+        expect(TokenType.L_PAREN);
+        if(check(TokenType.CONST_KW)||check(TokenType.IDENT)){
+            analyseParamList(symbol);
         }
-
-        var token = expect(TokenType.Uint);
-
-        int value = (int) token.getValue();
-        if (negative) {
-            value = -value;
-        }
-
-        return value;
-    }
-
-    private void analyseExpression() throws CompileError {
-        // 表达式 -> 项 (加法运算符 项)*
-        // 项
-        analyseItem();
-
-        while (true) {
-            // 预读可能是运算符的 token
-            var op = peek();
-            if (op.getTokenType() != TokenType.Plus && op.getTokenType() != TokenType.Minus) {
+        expect(TokenType.R_PAREN);
+        expect(TokenType.ARROW);
+        switch (expect(TokenType.IDENT).getValue().toString()) {
+            case "int":
+                type = IdentType.INT;
                 break;
+            case "double":
+                type = IdentType.DOUBLE;
+                break;
+            case "void":
+                type = IdentType.VOID;
+                break;
+            default:
+                throw new AnalyzeError(ErrorCode.ExpectTY, peekedToken.getStartPos());
+        }
+        symbol.setIdentType(type);
+        if(name.getValue().toString().equals("main")){
+            this.main=symbol;
+            if(type==IdentType.VOID){
+                _start.getInstructions().add(new Instruction(Operation.STACKALLOC, 0L));
             }
-
-            // 运算符
-            next();
-
-            // 项
-            analyseItem();
-
-            // 生成代码
-            if (op.getTokenType() == TokenType.Plus) {
-                instructions.add(new Instruction(Operation.ADD));
-            } else if (op.getTokenType() == TokenType.Minus) {
-                instructions.add(new Instruction(Operation.SUB));
+            else {
+                _start.getInstructions().add(new Instruction(Operation.STACKALLOC,1L));
             }
+            _start.getInstructions().add(new Instruction(Operation.CALL,symbol.getStackOffset()));
+        }
+        funcTable.addSymbol(symbol,name.getStartPos());
+        analyseBlockStatement(symbol,localTable,false,-1);
+        if(type==IdentType.VOID||symbol.getInstructions().get(symbol.getInstructions().size()-1).getOpt()!=Operation.RET){
+            symbol.getInstructions().add(new Instruction(Operation.RET));
         }
     }
 
-    private void analyseAssignmentStatement() throws CompileError {
-        // 赋值语句 -> 标识符 '=' 表达式 ';'
+    private void analyseParamList(SymbolEntry cur_func) throws CompileError{
+        SymbolEntry symbol=new SymbolEntry(cur_func.getParamTable().getNextVariableOffset());
 
-        // 分析这个语句
-
-        // 标识符是什么？
-        String name = null;
-        var symbol = symbolTable.get(name);
-        if (symbol == null) {
-            // 没有这个标识符
-            throw new AnalyzeError(ErrorCode.NotDeclared, /* 当前位置 */ null);
-        } else if (symbol.isConstant) {
-            // 标识符是常量
-            throw new AnalyzeError(ErrorCode.AssignToConstant, /* 当前位置 */ null);
+        if(nextIf(TokenType.CONST_KW)!=null){
+            symbol.setSymbolType(SymbolType.CONST);
         }
-        // 设置符号已初始化
-        initializeSymbol(name, null);
+        else{
+            symbol.setSymbolType(SymbolType.LET);
+        }
+        var name = expect(TokenType.IDENT);
+        expect(TokenType.COLON);
+        IdentType type;
+        switch (expect(TokenType.IDENT).getValue().toString()) {
+            case "int":
+                type = IdentType.INT;
+                break;
+            case "double":
+                type = IdentType.DOUBLE;
+                break;
+            default:
+                throw new AnalyzeError(ErrorCode.ExpectTY, peekedToken.getStartPos());
+        }
 
-        // 把结果保存
-        var offset = getOffset(name, null);
-        instructions.add(new Instruction(Operation.STO, offset));
+        symbol.setName(name.getValue().toString());
+        symbol.setInitialized(true);
+        symbol.setIdentType(type);
+        symbol.setParam(true);
+        symbol.setParam_cnt(cur_func.getParamTable().getSymbolTable().size()+1);
+
+        cur_func.getParamTable().addSymbol(symbol,name.getStartPos());
+        if(nextIf(TokenType.COMMA)!=null){
+            analyseParamList(cur_func);
+        }
     }
 
-    private void analyseOutputStatement() throws CompileError {
-        // 输出语句 -> 'print' '(' 表达式 ')' ';'
-
-        expect(TokenType.Print);
-        expect(TokenType.LParen);
-
-        analyseExpression();
-
-        expect(TokenType.RParen);
-        expect(TokenType.Semicolon);
-
-        instructions.add(new Instruction(Operation.WRT));
-    }
-
-    private void analyseItem() throws CompileError {
-        // 项 -> 因子 (乘法运算符 因子)*
-
-        // 因子
-
-        while (true) {
-            // 预读可能是运算符的 token
-            Token op = null;
-
-            // 运算符
-
-            // 因子
-
-            // 生成代码
-            if (op.getTokenType() == TokenType.Mult) {
-                instructions.add(new Instruction(Operation.MUL));
-            } else if (op.getTokenType() == TokenType.Div) {
-                instructions.add(new Instruction(Operation.DIV));
+    private Instruction[] analyseBlockStatement(SymbolEntry cur_func,SymbolTable varTable,boolean isWhile,int startOffset) throws CompileError{
+        ArrayList<Instruction> brList=new ArrayList<>();
+        expect(TokenType.L_BRACE);
+        while(check(TokenType.IF_KW)||check(TokenType.WHILE_KW)||check(TokenType.RETURN_KW)
+                ||check(TokenType.SEMICOLON)||check(TokenType.MINUS)||check(TokenType.IDENT)
+                ||check(TokenType.LET_KW)||check(TokenType.CONST_KW)
+                ||check(TokenType.CONTINUE_KW)||check(TokenType.BREAK_KW)||check(TokenType.COLON)
+                ||check(TokenType.L_BRACE)) {
+            Instruction[] br=analyseStatement(cur_func,varTable,isWhile,startOffset);
+            if(br!=null){
+                brList.addAll(Arrays.asList(br));
             }
         }
+        expect(TokenType.R_BRACE);
+        return brList.toArray(new Instruction[0]);
+    }
+    private Instruction[] analyseStatement(SymbolEntry cur_func,SymbolTable varTable,boolean isWhile,int startOffset) throws CompileError {
+        if(check(TokenType.IF_KW)){
+            return analyseIfStatement(cur_func,varTable,isWhile,startOffset);
+        }
+        else if(check(TokenType.WHILE_KW)){
+            analyseWhileStatement(cur_func,varTable,isWhile,startOffset);
+            return null;
+        }
+        else if(check(TokenType.RETURN_KW)){
+            analyseReturnStatement(cur_func,varTable);
+            return null;
+        }
+        else if(check(TokenType.IDENT)){
+            analyseIdentStatement(cur_func,varTable);
+            return null;
+        }
+        else if(check(TokenType.LET_KW)||check(TokenType.CONST_KW)){
+            analyseDeclaration(cur_func,varTable);
+            return null;
+        }
+        else if(check(TokenType.CONTINUE_KW)){
+            analyseContinueStatement(cur_func,varTable,isWhile,startOffset);
+            return null;
+        }
+        else if(check(TokenType.BREAK_KW)){
+            return new Instruction[]{analyseBreakStatement(cur_func,varTable,isWhile,startOffset)};
+        }
+        else if(check(TokenType.L_BRACE)){
+            SymbolTable blockTable=new SymbolTable(cur_func.getLocalTable().getNextOffset());
+            blockTable.setLastTable(varTable);
+            return analyseBlockStatement(cur_func,blockTable,isWhile,-1);
+        }
+        else if(check(TokenType.COLON)){
+            expect(TokenType.COLON);
+            return null;
+        }
+        else{
+            throw new ExpectedTokenError(List.of(TokenType.IF_KW,TokenType.WHILE_KW,TokenType.RETURN_KW,
+                    TokenType.SEMICOLON,TokenType.IDENT, TokenType.LET_KW,TokenType.CONST_KW,TokenType.CONTINUE_KW,TokenType.BREAK_KW),next());
+        }
     }
 
-    private void analyseFactor() throws CompileError {
-        // 因子 -> 符号? (标识符 | 无符号整数 | '(' 表达式 ')')
+    private Instruction[] analyseIfStatement(SymbolEntry cur_func,SymbolTable varTable,boolean isWhile,int startOffset) throws CompileError {
+        expect(TokenType.IF_KW);
 
-        boolean negate;
-        if (nextIf(TokenType.Minus) != null) {
-            negate = true;
-            // 计算结果需要被 0 减
-            instructions.add(new Instruction(Operation.LIT, 0));
-        } else {
-            nextIf(TokenType.Plus);
-            negate = false;
+        IdentType type=analyseBooleanExpression(cur_func, varTable);
+        cur_func.getInstructions().add(new Instruction(Operation.BR_TRUE,1L));
+
+        Instruction if_1=new Instruction(Operation.BR);
+        cur_func.getInstructions().add(if_1);
+        int offset_1=cur_func.getInstructions().size();
+
+        SymbolTable if_blockTable=new SymbolTable(cur_func.getLocalTable().getNextOffset());
+        if_blockTable.setLastTable(varTable);
+        Instruction[] if_br =analyseBlockStatement(cur_func,if_blockTable,isWhile,startOffset);
+        List<Instruction> brList = new ArrayList<>(Arrays.asList(if_br));
+
+        Instruction if_2=new Instruction(Operation.BR, 0L);
+        cur_func.getInstructions().add(if_2);
+        int offset_2=cur_func.getInstructions().size();
+
+        if_1.setX(offset_2-offset_1);
+
+        if(check(TokenType.ELSE_KW)){
+            expect(TokenType.ELSE_KW);
+            if (check(TokenType.L_BRACE)) {
+                SymbolTable else_blockTable=new SymbolTable(cur_func.getLocalTable().getNextOffset());
+                else_blockTable.setLastTable(varTable);
+                if_br=analyseBlockStatement(cur_func,else_blockTable,isWhile,startOffset);
+                brList.addAll(Arrays.asList(if_br));
+            } else if (check(TokenType.IF_KW)) {
+                if_br=analyseIfStatement(cur_func,varTable,isWhile,startOffset);
+                brList.addAll(Arrays.asList(if_br));
+            }
+            int offset_3=cur_func.getInstructions().size();
+            if_2.setX(offset_3-offset_2);
+        }
+        return brList.toArray(new Instruction[0]);
+    }
+
+    private void analyseWhileStatement(SymbolEntry cur_func,SymbolTable varTable,boolean isWhile,int startOffset) throws CompileError {
+        expect(TokenType.WHILE_KW);
+
+        Instruction while_1=new Instruction(Operation.BR,0L);
+        cur_func.getInstructions().add(while_1);
+        int offset_1=cur_func.getInstructions().size();
+
+        IdentType type=analyseBooleanExpression(cur_func,varTable);
+        cur_func.getInstructions().add(new Instruction(Operation.BR_TRUE,1L));
+
+        Instruction while_2=new Instruction(Operation.BR,0L);
+        cur_func.getInstructions().add(while_2);
+        int offset_2=cur_func.getInstructions().size();
+
+        SymbolTable blockTable=new SymbolTable(cur_func.getLocalTable().getNextOffset());
+        blockTable.setLastTable(varTable);
+        Instruction[] break_br =analyseBlockStatement(cur_func,blockTable,true,offset_1);
+
+        Instruction while_3=new Instruction(Operation.BR);
+        cur_func.getInstructions().add(while_3);
+        int offset_3=cur_func.getInstructions().size();
+
+        for (Instruction br:break_br){
+            br.setX(offset_3- br.getX());
         }
 
-        if (check(TokenType.Ident)) {
-            // 是标识符
+        while_3.setX(offset_1-offset_3);
+        while_2.setX(offset_3-offset_2);
+    }
 
-            // 加载标识符的值
-            String name = /* 快填 */ null;
-            var symbol = symbolTable.get(name);
-            if (symbol == null) {
-                // 没有这个标识符
-                throw new AnalyzeError(ErrorCode.NotDeclared, /* 当前位置 */ null);
-            } else if (!symbol.isInitialized) {
-                // 标识符没初始化
-                throw new AnalyzeError(ErrorCode.NotInitialized, /* 当前位置 */ null);
+    private void analyseContinueStatement(SymbolEntry cur_func,SymbolTable varTable,boolean isWhile,int startOffset) throws CompileError{
+        if(!isWhile)
+            throw new AnalyzeError(ErrorCode.ContinueOutOfWhile,peek().getStartPos());
+        if(startOffset==-1)
+            throw new AnalyzeError(ErrorCode.InvalidJMPOffset,peek().getStartPos());
+        expect(TokenType.CONTINUE_KW);
+        expect(TokenType.SEMICOLON);
+
+        Instruction br=new Instruction(Operation.BR);
+        cur_func.getInstructions().add(br);
+        br.setX(startOffset-cur_func.getInstructions().size());
+    }
+    private Instruction analyseBreakStatement(SymbolEntry cur_func,SymbolTable varTable,boolean isWhile,int startOffset) throws CompileError {
+        if(!isWhile)
+            throw new AnalyzeError(ErrorCode.BreakOutOfWhile,peek().getStartPos());
+        expect(TokenType.BREAK_KW);
+        expect(TokenType.SEMICOLON);
+
+        Instruction br=new Instruction(Operation.BR);
+        cur_func.getInstructions().add(br);
+        br.setX(cur_func.getInstructions().size());
+        return br;
+    }
+    private void analyseReturnStatement(SymbolEntry cur_func,SymbolTable varTable) throws CompileError {
+        expect(TokenType.RETURN_KW);
+        if(cur_func.getIdentType()!=IdentType.VOID){
+            cur_func.getInstructions().add(new Instruction(Operation.ARGA, 0L));
+            IdentType type=analyseExpression(cur_func,varTable);
+            cur_func.getInstructions().add(new Instruction(Operation.STORE_64));
+            if(type!=cur_func.getIdentType()){
+                throw new AnalyzeError(ErrorCode.InvalidReturnType,peek().getStartPos());
             }
-            var offset = getOffset(name, null);
-            instructions.add(new Instruction(Operation.LOD, offset));
-        } else if (check(TokenType.Uint)) {
-            // 是整数
-            // 加载整数值
-            int value = 0;
-            instructions.add(new Instruction(Operation.LIT, value));
-        } else if (check(TokenType.LParen)) {
-            // 是表达式
-            // 调用相应的处理函数
+        }
+        expect(TokenType.SEMICOLON);
+        cur_func.getInstructions().add(new Instruction(Operation.RET));
+    }
+
+    private void analyseIdentStatement(SymbolEntry cur_func,SymbolTable varTable) throws CompileError{
+        var name=expect(TokenType.IDENT);
+        if(check(TokenType.L_PAREN)){
+            analyseFn(cur_func,varTable,name);
+        }
+        else if(check(TokenType.ASSIGN)){
+            SymbolEntry entry=getIdent(cur_func,varTable,name);
+            if(entry.isConstant()){
+                throw new AnalyzeError(ErrorCode.AssignToConstant,name.getStartPos());
+            }
+            expect(TokenType.ASSIGN);
+            entry.setInitialized(true);
+            IdentType type=analyseExpression(cur_func, varTable);
+            if(type!=entry.getIdentType()){
+                throw new AnalyzeError(ErrorCode.InvalidAssignment,name.getStartPos());
+            }
+            cur_func.getInstructions().add(new Instruction(Operation.STORE_64));
+        }
+        else{
+            throw new ExpectedTokenError(List.of(TokenType.IDENT,TokenType.ASSIGN) ,next());
+        }
+        expect(TokenType.SEMICOLON);
+    }
+    private IdentType analyseBooleanExpression(SymbolEntry cur_func,SymbolTable varTable) throws CompileError {
+        IdentType type=analyseExpression(cur_func, varTable);
+        IdentType subtype;
+        if(check(TokenType.LT)){
+            expect(TokenType.LT);
+            subtype=analyseExpression(cur_func, varTable);
+            if(subtype!=type)
+                throw new AnalyzeError(ErrorCode.InvalidExpressionType,peek().getStartPos());
+
+            if(type==IdentType.INT){
+                cur_func.getInstructions().add(new Instruction(Operation.CMP_I));
+            }
+            else if(type==IdentType.DOUBLE){
+                cur_func.getInstructions().add(new Instruction(Operation.CMP_F));
+            }
+            cur_func.getInstructions().add(new Instruction(Operation.SET_LT));
+            return IdentType.BOOLEAN;
+        }
+        else if(check(TokenType.LE)){
+            expect(TokenType.LE);
+            subtype=analyseExpression(cur_func, varTable);
+            if(subtype!=type)
+                throw new AnalyzeError(ErrorCode.InvalidExpressionType,peek().getStartPos());
+
+            if(type==IdentType.INT){
+                cur_func.getInstructions().add(new Instruction(Operation.CMP_I));
+            }
+            else if(type==IdentType.DOUBLE){
+                cur_func.getInstructions().add(new Instruction(Operation.CMP_F));
+            }
+            cur_func.getInstructions().add(new Instruction(Operation.SET_GT));
+            cur_func.getInstructions().add(new Instruction(Operation.NOT));
+            return IdentType.BOOLEAN;
+        }
+        else if(check(TokenType.GT)){
+            expect(TokenType.GT);
+            subtype=analyseExpression(cur_func, varTable);
+            if(subtype!=type)
+                throw new AnalyzeError(ErrorCode.InvalidExpressionType,peek().getStartPos());
+
+            if(type==IdentType.INT){
+                cur_func.getInstructions().add(new Instruction(Operation.CMP_I));
+            }
+            else if(type==IdentType.DOUBLE){
+                cur_func.getInstructions().add(new Instruction(Operation.CMP_F));
+            }
+            cur_func.getInstructions().add(new Instruction(Operation.SET_GT));
+            return IdentType.BOOLEAN;
+        }
+        else if(check(TokenType.GE)){
+            expect(TokenType.GE);
+            subtype=analyseExpression(cur_func, varTable);
+            if(subtype!=type)
+                throw new AnalyzeError(ErrorCode.InvalidExpressionType,peek().getStartPos());
+
+            if(type==IdentType.INT){
+                cur_func.getInstructions().add(new Instruction(Operation.CMP_I));
+            }
+            else if(type==IdentType.DOUBLE){
+                cur_func.getInstructions().add(new Instruction(Operation.CMP_F));
+            }
+            cur_func.getInstructions().add(new Instruction(Operation.SET_LT));
+            cur_func.getInstructions().add(new Instruction(Operation.NOT));
+            return IdentType.BOOLEAN;
+        }
+        else if(check(TokenType.NEQ)){
+            expect(TokenType.NEQ);
+            subtype=analyseExpression(cur_func, varTable);
+            if(subtype!=type)
+                throw new AnalyzeError(ErrorCode.InvalidExpressionType,peek().getStartPos());
+
+            if(type==IdentType.INT){
+                cur_func.getInstructions().add(new Instruction(Operation.CMP_I));
+            }
+            else if(type==IdentType.DOUBLE){
+                cur_func.getInstructions().add(new Instruction(Operation.CMP_F));
+            }
+            return IdentType.BOOLEAN;
+        }
+        else if(check(TokenType.EQ)){
+            expect(TokenType.EQ);
+            subtype=analyseExpression(cur_func, varTable);
+            if(subtype!=type)
+                throw new AnalyzeError(ErrorCode.InvalidExpressionType,peek().getStartPos());
+
+            if(type==IdentType.INT){
+                cur_func.getInstructions().add(new Instruction(Operation.CMP_I));
+            }
+            else if(type==IdentType.DOUBLE){
+                cur_func.getInstructions().add(new Instruction(Operation.CMP_F));
+            }
+            cur_func.getInstructions().add(new Instruction(Operation.NOT));
+            return IdentType.BOOLEAN;
+        }
+        return type;
+
+    }
+
+    private IdentType analyseExpression(SymbolEntry cur_func,SymbolTable varTable) throws CompileError{
+        IdentType type=analyseTerm(cur_func,varTable);
+        while(check(TokenType.MINUS)||check(TokenType.PLUS)){
+            if(nextIf(TokenType.MINUS)!=null){
+                IdentType subtype=analyseTerm(cur_func,varTable);
+                if(subtype!=type){
+                    throw new AnalyzeError(ErrorCode.InvalidExpressionType,peek().getStartPos());
+                }
+                if(type==IdentType.DOUBLE){
+                    cur_func.getInstructions().add(new Instruction(Operation.SUB_F));
+                }
+                else if(type==IdentType.INT){
+                    cur_func.getInstructions().add(new Instruction(Operation.SUB_I));
+                }
+            }
+            else if(nextIf(TokenType.PLUS)!=null){
+                IdentType subtype=analyseTerm(cur_func,varTable);
+                if(subtype!=type){
+                    throw new AnalyzeError(ErrorCode.InvalidExpressionType,peek().getStartPos());
+                }
+                if(type==IdentType.DOUBLE){
+                    cur_func.getInstructions().add(new Instruction(Operation.ADD_F));
+                }
+                else if(type==IdentType.INT){
+                    cur_func.getInstructions().add(new Instruction(Operation.ADD_I));
+                }
+            }
+        }
+        return type;
+    }
+    private IdentType analyseTerm(SymbolEntry cur_func,SymbolTable varTable) throws CompileError {
+        IdentType type=analyseFactor(cur_func,varTable);
+        while(check(TokenType.MUL)||check(TokenType.DIV)){
+            if(nextIf(TokenType.MUL)!=null){
+                IdentType subtype=analyseFactor(cur_func,varTable);
+                if(subtype!=type){
+                    throw new AnalyzeError(ErrorCode.InvalidExpressionType,peek().getStartPos());
+                }
+                if(type==IdentType.DOUBLE){
+                    cur_func.getInstructions().add(new Instruction(Operation.MUL_F));
+                }
+                else if(type==IdentType.INT){
+                    cur_func.getInstructions().add(new Instruction(Operation.MUL_I));
+                }
+            }
+            else if(nextIf(TokenType.DIV)!=null){
+                IdentType subtype=analyseFactor(cur_func,varTable);
+                if(subtype!=type){
+                    throw new AnalyzeError(ErrorCode.InvalidExpressionType,peek().getStartPos());
+                }
+                if(type==IdentType.DOUBLE){
+                    cur_func.getInstructions().add(new Instruction(Operation.DIV_F));
+                }
+                else if(type==IdentType.INT){
+                    cur_func.getInstructions().add(new Instruction(Operation.DIV_I));
+                }
+            }
+        }
+        return type;
+    }
+
+    private IdentType analyseFactor(SymbolEntry cur_func,SymbolTable varTable) throws CompileError {
+        int negate = 0;
+        IdentType type;
+        while (check(TokenType.MINUS) ||check(TokenType.PLUS)) {
+            if(nextIf(TokenType.MINUS)!=null){
+                negate = negate+1;
+                // 计算结果需要被 0 减
+            }
+            else{
+                nextIf(TokenType.PLUS);
+            }
+        }
+
+        if (check(TokenType.IDENT)) {
+            Token name=expect(TokenType.IDENT);
+            if(check(TokenType.L_PAREN)){
+                type=analyseFn(cur_func,varTable,name);
+            }
+            else{
+                SymbolEntry entry;
+                entry=getIdent(cur_func,varTable,name);
+                cur_func.getInstructions().add(new Instruction(Operation.LOAD_64));
+                type=entry.getIdentType();
+            }
+        } else if (check(TokenType.UINT_LITERAL)) {
+            Token name=expect(TokenType.UINT_LITERAL);
+            cur_func.getInstructions().add(new Instruction(Operation.PUSH,(Long) name.getValue()));
+            type=IdentType.INT;
+
+        } else if (check(TokenType.DOUBLE_LITERAL)) {
+            Token name=expect(TokenType.DOUBLE_LITERAL);
+            cur_func.getInstructions().add(new Instruction(Operation.PUSH,(Long) name.getValue()));
+            type=IdentType.DOUBLE;
+
+        }else if(check(TokenType.STRING_LITERAL)){
+            Token name=expect(TokenType.STRING_LITERAL);
+            SymbolEntry symbol=new SymbolEntry(name.getValue().toString(),name.getValue().toString(),
+                    true,globalTable.getNextVariableOffset(),SymbolType.CONST,IdentType.STRING);
+            globalTable.addSymbol(symbol,name.getStartPos());
+            cur_func.getInstructions().add(new Instruction(Operation.PUSH,symbol.getStackOffset()));
+            type=IdentType.STRING;
+        }
+        else if (check(TokenType.L_PAREN)) {
+            expect(TokenType.L_PAREN);
+            type=analyseBooleanExpression(cur_func,varTable);
+            expect(TokenType.R_PAREN);
         } else {
             // 都不是，摸了
-            throw new ExpectedTokenError(List.of(TokenType.Ident, TokenType.Uint, TokenType.LParen), next());
+            throw new ExpectedTokenError(List.of(TokenType.IDENT, TokenType.UINT_LITERAL, TokenType.L_PAREN), next());
         }
 
-        if (negate) {
-            instructions.add(new Instruction(Operation.SUB));
+        while(check(TokenType.AS_KW)){
+            expect(TokenType.AS_KW);
+            Token ty=expect(TokenType.IDENT);
+            if(ty.getValue().toString().equals("int") && type==IdentType.DOUBLE){
+                type=IdentType.INT;
+                cur_func.getInstructions().add(new Instruction(Operation.FTOI));
+            }
+            else if(ty.getValue().toString().equals("double") && type==IdentType.INT){
+                type=IdentType.DOUBLE;
+                cur_func.getInstructions().add(new Instruction(Operation.ITOF));
+            }
+            else if(!ty.getValue().toString().equals(type.toString())){
+                throw new AnalyzeError(ErrorCode.InvalidAS,ty.getStartPos());
+            }
         }
-        throw new Error("Not implemented");
+
+        if(negate % 2 == 1){
+            if(type==IdentType.DOUBLE){
+                cur_func.getInstructions().add(new Instruction(Operation.NEG_F));
+            }
+            else if(type==IdentType.INT){
+                cur_func.getInstructions().add(new Instruction(Operation.NEG_I));
+            }
+        }
+        return type;
+    }
+
+    private IdentType analyseFn(SymbolEntry cur_func,SymbolTable varTable,Token name) throws CompileError {
+        IdentType type=null;
+        String funcName=name.getValue().toString();
+        if(funcName.equals("getint")||funcName.equals("getdouble")||funcName.equals("getchar")){
+            SymbolEntry entry=funcTable.findSymbolNoRe(funcName,name.getStartPos());
+            expect(TokenType.L_PAREN);
+            expect(TokenType.R_PAREN);
+            cur_func.getInstructions().add(new Instruction(Operation.STACKALLOC, 1L));
+            cur_func.getInstructions().add(new Instruction(Operation.CALLNAME,entry.getStackOffset()));
+            if(funcName.equals("getint")||funcName.equals("getchar")){
+                type=IdentType.INT;
+            }
+            else {
+                type=IdentType.DOUBLE;
+            }
+        }
+        if(funcName.equals("putint")||funcName.equals("putchar")||funcName.equals("putstr")){
+            SymbolEntry entry=funcTable.findSymbolNoRe(funcName.toString(),name.getStartPos());
+            cur_func.getInstructions().add(new Instruction(Operation.STACKALLOC,0L));
+            expect(TokenType.L_PAREN);
+            IdentType ty=analyseExpression(cur_func,varTable);
+            if(ty!=IdentType.INT)
+                throw new AnalyzeError(ErrorCode.InvalidFuncTY,peek().getStartPos());
+            expect(TokenType.R_PAREN);
+
+            cur_func.getInstructions().add(new Instruction(Operation.CALLNAME,entry.getStackOffset()));
+            type=IdentType.VOID;
+        }
+        else if(funcName.equals("putdouble")){
+            SymbolEntry entry=funcTable.findSymbolNoRe(funcName,name.getStartPos());
+            cur_func.getInstructions().add(new Instruction(Operation.STACKALLOC,0L));
+            expect(TokenType.L_PAREN);
+            IdentType ty=analyseExpression(cur_func,varTable);
+            if(ty!=IdentType.DOUBLE)
+                throw new AnalyzeError(ErrorCode.InvalidFuncTY,peek().getStartPos());
+            expect(TokenType.R_PAREN);
+
+            cur_func.getInstructions().add(new Instruction(Operation.CALLNAME,entry.getStackOffset()));
+            type=IdentType.VOID;
+        }
+        else if(funcName.equals("putln")){
+            SymbolEntry entry=funcTable.findSymbolNoRe(funcName,name.getStartPos());
+            expect(TokenType.L_PAREN);
+            expect(TokenType.R_PAREN);
+            cur_func.getInstructions().add(new Instruction(Operation.STACKALLOC, 0L));
+            cur_func.getInstructions().add(new Instruction(Operation.CALLNAME,entry.getStackOffset()));
+            type=IdentType.VOID;
+        }
+        else{
+            SymbolEntry entry=funcTable.findSymbolNoRe(funcName,name.getStartPos());
+            if(entry.getIdentType()==IdentType.VOID)
+                cur_func.getInstructions().add(new Instruction(Operation.STACKALLOC, 0L));
+            else if(entry.getIdentType()==IdentType.INT || entry.getIdentType()==IdentType.DOUBLE)
+                cur_func.getInstructions().add(new Instruction(Operation.STACKALLOC, 1L));
+
+            expect(TokenType.L_PAREN);
+            for(int i=0;i<entry.getParam_cnt();i++){
+                analyseExpression(cur_func, varTable);
+                if(i!=entry.getParam_cnt()-1)
+                    expect(TokenType.COMMA);
+            }
+            expect(TokenType.R_PAREN);
+            cur_func.getInstructions().add(new Instruction(Operation.CALL,entry.getStackOffset()));
+            type=entry.getIdentType();
+        }
+        return type;
+    }
+    public static SymbolEntry findSymbolInLocal(SymbolTable para,SymbolTable glo,SymbolTable local,String name, Pos curPos) throws AnalyzeError {
+        SymbolEntry entry;
+
+        while(local!=null && !local.equals(para) && !local.equals(glo) ){
+            entry = local.getSymbolTable().get(name);
+            if(entry!=null)
+                return entry;
+            local=local.getLastTable();
+        }
+        return null;
+    }
+    public SymbolEntry getIdent(SymbolEntry cur_func,SymbolTable varTable,Token name) throws AnalyzeError {
+        SymbolEntry entry;
+        entry=findSymbolInLocal(cur_func.getParamTable(),globalTable,varTable,name.getValue().toString(),name.getStartPos());
+        if(entry!=null){
+            cur_func.getInstructions().add(new Instruction(Operation.LOCA,entry.stackOffset));
+        }
+        else if(cur_func.getParamTable()!=null){
+            entry=cur_func.getParamTable().findSymbolNoRe(name.getValue().toString(),name.getStartPos());
+            if(entry!=null){
+                cur_func.getInstructions().add(new Instruction(Operation.ARGA,entry.stackOffset));
+            }
+            else{
+                entry=globalTable.findSymbolNoRe(name.getValue().toString(),name.getStartPos());
+                if(entry!=null)
+                    cur_func.getInstructions().add(new Instruction(Operation.GLOBA,entry.stackOffset));
+                else
+                    throw new AnalyzeError(ErrorCode.NotDeclared, name.getStartPos());
+            }
+        }
+        else{
+            entry=globalTable.findSymbolNoRe(name.getValue().toString(),name.getStartPos());
+            if(entry!=null)
+                cur_func.getInstructions().add(new Instruction(Operation.GLOBA,entry.stackOffset));
+            else
+                throw new AnalyzeError(ErrorCode.NotDeclared, name.getStartPos());
+        }
+        return entry;
     }
 }

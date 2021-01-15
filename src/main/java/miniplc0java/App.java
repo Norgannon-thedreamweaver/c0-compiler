@@ -99,19 +99,16 @@ public class App {
             var analyzer = new Analyser(tokenizer);
             List<Instruction> instructions;
             try {
-                instructions = analyzer.analyse();
+                analyzer.analyse();
             } catch (Exception e) {
                 // 遇到错误不输出，直接退出
                 System.err.println(e);
                 System.exit(-2);
                 return;
             }
-            for (Instruction instruction : instructions) {
-                output.println(instruction.toString());
-            }
         } else {
             System.err.println("Please specify either '--analyse' or '--tokenize'.");
-            System.exit(3);
+            System.exit(-3);
         }
     }
 
