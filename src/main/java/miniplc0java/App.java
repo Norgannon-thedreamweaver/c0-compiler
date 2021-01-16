@@ -78,7 +78,8 @@ public class App {
                 }
             } catch (Exception e) {
                 // 遇到错误不输出，直接退出
-                e.printStackTrace();
+                System.err.println(e);
+                //e.printStackTrace();
                 System.exit(-1);
                 return;
             }
@@ -96,7 +97,8 @@ public class App {
                 generator.generateBin();
             } catch (Exception e) {
                 // 遇到错误不输出，直接退出
-                e.printStackTrace();
+                System.err.println(e);
+                //e.printStackTrace();
                 System.exit(-2);
             }
         } else {

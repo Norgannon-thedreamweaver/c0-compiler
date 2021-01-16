@@ -302,7 +302,6 @@ public final class Analyser {
         }
         globalTable.addSymbol(symbol,name.getStartPos());
         funcTable.addSymbol(symbol,name.getStartPos());
-        System.out.println(symbol.name+" "+symbol.getParam_cnt());
         analyseBlockStatement(symbol,localTable,false,-1);
         if(type==IdentType.VOID||symbol.getInstructions().get(symbol.getInstructions().size()-1).getOpt()!=Operation.RET){
             symbol.getInstructions().add(new Instruction(Operation.RET));

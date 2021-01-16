@@ -30,6 +30,7 @@ public class Generator {
     private void generateGlobals() throws IOException {
         int count=analyser.globalTable.getSize();
         output.writeInt(count);
+        System.out.println("global size:"+count);
         LinkedHashMap<String, SymbolEntry> table=analyser.globalTable.getSymbolTable();
         for(SymbolEntry entry : table.values()) {
             System.out.println(entry.getName());
@@ -52,6 +53,7 @@ public class Generator {
     private void generateFunctions() throws IOException{
         int count=analyser.funcTable.getSize();
         output.writeInt(count);
+        System.out.println("function size:"+count);
 
         LinkedHashMap<String, SymbolEntry> table=analyser.funcTable.getSymbolTable();
         for(SymbolEntry entry : table.values()) {
