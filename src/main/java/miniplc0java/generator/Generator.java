@@ -72,8 +72,8 @@ public class Generator {
             System.out.print(" "+entry.getParam_cnt());
 
             SymbolTable localTable=entry.getLocalTable();
-            output.writeInt(localTable.getSize());
-            System.out.println(" "+localTable.getSize());
+            output.writeInt(localTable.getNextOffset().getOffset());
+            System.out.println(" "+localTable.getNextOffset().getOffset());
 
             ArrayList<Instruction> instructions=entry.getInstructions();
             output.writeInt(instructions.size());
