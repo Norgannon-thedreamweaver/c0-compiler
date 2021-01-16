@@ -779,8 +779,18 @@ public final class Analyser {
             SymbolEntry entry=funcTable.findSymbolNoRe(funcName,name.getStartPos());
             expect(TokenType.L_PAREN);
             expect(TokenType.R_PAREN);
-            cur_func.getInstructions().add(new Instruction(Operation.STACKALLOC, 1L));
-            cur_func.getInstructions().add(new Instruction(Operation.CALLNAME,entry.getStackOffset()));
+            //cur_func.getInstructions().add(new Instruction(Operation.STACKALLOC, 1L));
+            //cur_func.getInstructions().add(new Instruction(Operation.CALLNAME,entry.getStackOffset()));
+            if(funcName.equals("getint")){
+                cur_func.getInstructions().add(new Instruction(Operation.SCAN_I));
+            }
+            else if(funcName.equals("getchar")){
+                cur_func.getInstructions().add(new Instruction(Operation.SCAN_C));
+            }
+            else {
+                cur_func.getInstructions().add(new Instruction(Operation.SCAN_F));
+            }
+
             if(funcName.equals("getint")||funcName.equals("getchar")){
                 type=IdentType.INT;
             }
@@ -790,34 +800,43 @@ public final class Analyser {
         }
         else if(funcName.equals("putint")||funcName.equals("putchar")||funcName.equals("putstr")){
             SymbolEntry entry=funcTable.findSymbolNoRe(funcName.toString(),name.getStartPos());
-            cur_func.getInstructions().add(new Instruction(Operation.STACKALLOC,0L));
+            //cur_func.getInstructions().add(new Instruction(Operation.STACKALLOC,0L));
             expect(TokenType.L_PAREN);
             IdentType ty=analyseExpression(cur_func,varTable);
             if(ty!=IdentType.INT && ty!=IdentType.STRING)
                 throw new AnalyzeError(ErrorCode.InvalidFuncTY,peek().getStartPos());
             expect(TokenType.R_PAREN);
 
-            cur_func.getInstructions().add(new Instruction(Operation.CALLNAME,entry.getStackOffset()));
+            //cur_func.getInstructions().add(new Instruction(Operation.CALLNAME,entry.getStackOffset()));
+            if(funcName.equals("putint"))
+                cur_func.getInstructions().add(new Instruction(Operation.PRINT_I));
+            else if(funcName.equals("putchar"))
+                cur_func.getInstructions().add(new Instruction(Operation.PRINT_C));
+            else
+                cur_func.getInstructions().add(new Instruction(Operation.PRINT_S));
+
             type=IdentType.VOID;
         }
         else if(funcName.equals("putdouble")){
             SymbolEntry entry=funcTable.findSymbolNoRe(funcName,name.getStartPos());
-            cur_func.getInstructions().add(new Instruction(Operation.STACKALLOC,0L));
+            //cur_func.getInstructions().add(new Instruction(Operation.STACKALLOC,0L));
             expect(TokenType.L_PAREN);
             IdentType ty=analyseExpression(cur_func,varTable);
             if(ty!=IdentType.DOUBLE)
                 throw new AnalyzeError(ErrorCode.InvalidFuncTY,peek().getStartPos());
             expect(TokenType.R_PAREN);
 
-            cur_func.getInstructions().add(new Instruction(Operation.CALLNAME,entry.getStackOffset()));
+            //cur_func.getInstructions().add(new Instruction(Operation.CALLNAME,entry.getStackOffset()));
+            cur_func.getInstructions().add(new Instruction(Operation.PRINT_F));
             type=IdentType.VOID;
         }
         else if(funcName.equals("putln")){
             SymbolEntry entry=funcTable.findSymbolNoRe(funcName,name.getStartPos());
             expect(TokenType.L_PAREN);
             expect(TokenType.R_PAREN);
-            cur_func.getInstructions().add(new Instruction(Operation.STACKALLOC, 0L));
-            cur_func.getInstructions().add(new Instruction(Operation.CALLNAME,entry.getStackOffset()));
+            //cur_func.getInstructions().add(new Instruction(Operation.STACKALLOC, 0L));
+            //cur_func.getInstructions().add(new Instruction(Operation.CALLNAME,entry.getStackOffset()));
+            cur_func.getInstructions().add(new Instruction(Operation.PRINTLN));
             type=IdentType.VOID;
         }
         else{
