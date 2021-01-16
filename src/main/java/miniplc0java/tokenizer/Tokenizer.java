@@ -94,7 +94,7 @@ public class Tokenizer {
                 if(!Character.isDigit(peek))
                     throw new TokenizeError(ErrorCode.InvalidInput, start);
                 while(Character.isDigit(peek)){//一直读数字
-                    floatPart.append(it.nextChar());
+                    exponentPart.append(it.nextChar());
                     peek = it.peekChar();
                 }
                 String str= numberPart.toString()+"."+floatPart.toString()+"e"+signPart+exponentPart.toString();
