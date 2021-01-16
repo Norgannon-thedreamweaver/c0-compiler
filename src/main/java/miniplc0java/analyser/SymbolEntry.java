@@ -3,6 +3,7 @@ package miniplc0java.analyser;
 import miniplc0java.instruction.Instruction;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 
 public class SymbolEntry {
     String name;
@@ -68,6 +69,14 @@ public class SymbolEntry {
         return this.symbolType == SymbolType.CONST;
     }
 
+    public void decParamIndex(){
+        LinkedHashMap<String, SymbolEntry> table=this.paramTable.getSymbolTable();
+        for(SymbolEntry entry : table.values()) {
+            entry.decStackOffset();
+        }
+        this.paramTable.getNextOffset().decOffset();
+    }
+
 
     public String getName() {
         return name;
@@ -95,6 +104,10 @@ public class SymbolEntry {
 
     public long getStackOffset() {
         return stackOffset;
+    }
+
+    public void decStackOffset(){
+        this.stackOffset--;
     }
 
     public void setStackOffset(long stackOffset) {

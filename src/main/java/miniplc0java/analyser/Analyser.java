@@ -288,6 +288,7 @@ public final class Analyser {
                 type = IdentType.DOUBLE;
                 break;
             case "void":
+                symbol.decParamIndex();
                 type = IdentType.VOID;
                 break;
             default:

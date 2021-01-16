@@ -68,7 +68,7 @@ public class Generator {
                 output.writeInt(1);
             }
 
-            output.writeInt(entry.getParam_cnt()+1);
+            output.writeInt(entry.getParam_cnt());
             System.out.print(" "+entry.getParam_cnt());
 
             SymbolTable localTable=entry.getLocalTable();

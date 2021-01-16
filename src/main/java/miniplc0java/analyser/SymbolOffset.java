@@ -18,4 +18,7 @@ public class SymbolOffset {
     public int incOffset(){
         return this.offset++;
     }
+    public int decOffset(){
+        return this.offset--;
+    }
 }
