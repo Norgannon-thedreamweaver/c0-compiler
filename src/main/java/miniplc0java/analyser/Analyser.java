@@ -730,6 +730,11 @@ public final class Analyser {
             cur_func.getInstructions().add(new Instruction(Operation.PUSH,symbol.getStackOffset()));
             type=IdentType.STRING;
         }
+        else if(check(TokenType.CHAR_LITERAL)){
+            Token name=expect(TokenType.CHAR_LITERAL);
+            cur_func.getInstructions().add(new Instruction(Operation.PUSH,((Integer)name.getValue()).longValue()));
+            type=IdentType.INT;
+        }
         else if (check(TokenType.L_PAREN)) {
             expect(TokenType.L_PAREN);
             type=analyseBooleanExpression(cur_func,varTable);
@@ -782,12 +787,12 @@ public final class Analyser {
                 type=IdentType.DOUBLE;
             }
         }
-        if(funcName.equals("putint")||funcName.equals("putchar")||funcName.equals("putstr")){
+        else if(funcName.equals("putint")||funcName.equals("putchar")||funcName.equals("putstr")){
             SymbolEntry entry=funcTable.findSymbolNoRe(funcName.toString(),name.getStartPos());
             cur_func.getInstructions().add(new Instruction(Operation.STACKALLOC,0L));
             expect(TokenType.L_PAREN);
             IdentType ty=analyseExpression(cur_func,varTable);
-            if(ty!=IdentType.INT)
+            if(ty!=IdentType.INT || ty!=IdentType.STRING)
                 throw new AnalyzeError(ErrorCode.InvalidFuncTY,peek().getStartPos());
             expect(TokenType.R_PAREN);
 
