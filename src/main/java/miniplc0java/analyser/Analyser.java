@@ -793,7 +793,7 @@ public final class Analyser {
             cur_func.getInstructions().add(new Instruction(Operation.STACKALLOC,0L));
             expect(TokenType.L_PAREN);
             IdentType ty=analyseExpression(cur_func,varTable);
-            if(ty!=IdentType.INT || ty!=IdentType.STRING)
+            if(ty!=IdentType.INT && ty!=IdentType.STRING)
                 throw new AnalyzeError(ErrorCode.InvalidFuncTY,peek().getStartPos());
             expect(TokenType.R_PAREN);
 
