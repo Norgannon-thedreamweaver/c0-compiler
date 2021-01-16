@@ -22,7 +22,7 @@ public class SymbolEntry {
 
     public SymbolEntry(int stackOffset){
         this.name=null;
-        this.value=null;
+        this.value=0;
         this.isInitialized = false;
         this.stackOffset = stackOffset;
         this.symbolType=null;

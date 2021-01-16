@@ -151,6 +151,8 @@ public enum TokenType {
                 return "semicolon";
             case COMMENT:
                 return "comment";
+            case EOF:
+                return "eof";
             default:
                 return "InvalidToken";
         }

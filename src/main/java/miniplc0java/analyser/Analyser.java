@@ -19,9 +19,8 @@ public final class Analyser {
     Tokenizer tokenizer;
     ArrayList<Instruction> instructions;
 
-    public SymbolTable funcTable=new SymbolTable(0);
-    public SymbolTable globalTable=new SymbolTable(0);
-    private SymbolTable paraTable =null;
+    public SymbolTable funcTable;
+    public SymbolTable globalTable;
 
     public SymbolEntry _start=null;
     public SymbolEntry main=null;
@@ -31,18 +30,43 @@ public final class Analyser {
     public Analyser(Tokenizer tokenizer) throws AnalyzeError {
         this.tokenizer = tokenizer;
         this.instructions = new ArrayList<>();
-        this._start=new SymbolEntry(null,null,false,funcTable.getNextVariableOffset(),
-                SymbolType.FN,IdentType.VOID,false,0,null,null,this.instructions);
-        funcTable.addSymbol(_start,null);
+        SymbolOffset shareInt= new SymbolOffset(0);
+        funcTable=new SymbolTable(shareInt);
+        globalTable=new SymbolTable(shareInt);
 
-        funcTable.addSymbol(new SymbolEntry("getint","getint",true,funcTable.getNextVariableOffset(),SymbolType.FN,IdentType.INT),null);
-        funcTable.addSymbol(new SymbolEntry("getdouble","getdouble",true,funcTable.getNextVariableOffset(),SymbolType.FN,IdentType.DOUBLE),null);
-        funcTable.addSymbol(new SymbolEntry("getchar","getchar",true,funcTable.getNextVariableOffset(),SymbolType.FN,IdentType.INT),null);
-        funcTable.addSymbol(new SymbolEntry("putint","putint",true,funcTable.getNextVariableOffset(),SymbolType.FN,IdentType.VOID),null);
-        funcTable.addSymbol(new SymbolEntry("putdouble","putdouble",true,funcTable.getNextVariableOffset(),SymbolType.FN,IdentType.VOID),null);
-        funcTable.addSymbol(new SymbolEntry("putchar","putchar",true,funcTable.getNextVariableOffset(),SymbolType.FN,IdentType.VOID),null);
-        funcTable.addSymbol(new SymbolEntry("putstr","putstr",true,funcTable.getNextVariableOffset(),SymbolType.FN,IdentType.VOID),null);
-        funcTable.addSymbol(new SymbolEntry("putln","putln",true,funcTable.getNextVariableOffset(),SymbolType.FN,IdentType.VOID),null);
+        this._start=new SymbolEntry("_start","_start",false,globalTable.getNextVariableOffset(),
+                SymbolType.FN,IdentType.VOID,false,0,new SymbolTable(0),new SymbolTable(0),this.instructions);
+        funcTable.addSymbol(_start,null);
+        globalTable.addSymbol(_start,null);
+
+        SymbolEntry entry;
+        entry=new SymbolEntry("getint","getint",true,globalTable.getNextVariableOffset(),SymbolType.FN,IdentType.INT);
+        funcTable.addSymbol(entry,null);
+        globalTable.addSymbol(entry,null);
+        entry=new SymbolEntry("getdouble","getdouble",true,globalTable.getNextVariableOffset(),SymbolType.FN,IdentType.DOUBLE);
+        funcTable.addSymbol(entry,null);
+        globalTable.addSymbol(entry,null);
+        entry=new SymbolEntry("getchar","getchar",true,globalTable.getNextVariableOffset(),SymbolType.FN,IdentType.INT);
+        funcTable.addSymbol(entry,null);
+        globalTable.addSymbol(entry,null);
+        entry=new SymbolEntry("putint","putint",true,globalTable.getNextVariableOffset(),SymbolType.FN,IdentType.VOID);
+        funcTable.addSymbol(entry,null);
+        globalTable.addSymbol(entry,null);
+        entry=new SymbolEntry("putdouble","putdouble",true,globalTable.getNextVariableOffset(),SymbolType.FN,IdentType.VOID);
+        funcTable.addSymbol(entry,null);
+        globalTable.addSymbol(entry,null);
+        entry=new SymbolEntry("putchar","putchar",true,globalTable.getNextVariableOffset(),SymbolType.FN,IdentType.VOID);
+        funcTable.addSymbol(entry,null);
+        globalTable.addSymbol(entry,null);
+        entry=new SymbolEntry("putstr","putstr",true,globalTable.getNextVariableOffset(),SymbolType.FN,IdentType.VOID);
+        funcTable.addSymbol(entry,null);
+        globalTable.addSymbol(entry,null);
+        entry=new SymbolEntry("putln","putln",true,globalTable.getNextVariableOffset(),SymbolType.FN,IdentType.VOID);
+        funcTable.addSymbol(entry,null);
+        globalTable.addSymbol(entry,null);
+
+        //System.out.println("func:"+funcTable.getNextOffset().getOffset());
+        //System.out.println("global:"+globalTable.getNextOffset().getOffset());
     }
 
     public void analyse() throws CompileError {
@@ -169,9 +193,7 @@ public final class Analyser {
         expect(TokenType.ASSIGN);
 
         SymbolEntry symbol=new SymbolEntry(name.getValue().toString(),0L,true,varTable.getNextVariableOffset(),SymbolType.CONST,type);
-        if(!cur_func.getLocalTable().equals(varTable)){
-            cur_func.getLocalTable().getNextVariableOffset();
-        }
+
         if(varTable.isStart()){
             cur_func.getInstructions().add(new Instruction(Operation.GLOBA,symbol.getStackOffset()));
         }
@@ -204,9 +226,6 @@ public final class Analyser {
             throw new AnalyzeError(ErrorCode.ExpectTY, peekedToken.getStartPos());
         }
         SymbolEntry symbol=new SymbolEntry(name.getValue().toString(),0L,false,varTable.getNextVariableOffset(),SymbolType.LET,type);
-        if(!cur_func.getLocalTable().equals(varTable)){
-            cur_func.getLocalTable().getNextVariableOffset();
-        }
 
         if(check(TokenType.ASSIGN)){
             expect(TokenType.ASSIGN);
@@ -229,7 +248,7 @@ public final class Analyser {
     }
 
     private void analyseFunction() throws CompileError {
-        SymbolEntry symbol=new SymbolEntry(funcTable.getNextVariableOffset());
+        SymbolEntry symbol=new SymbolEntry(globalTable.getNextVariableOffset());
         symbol.setSymbolType(SymbolType.FN);
         symbol.setInitialized(true);
 
@@ -237,7 +256,7 @@ public final class Analyser {
         symbol.setInstructions(cur_instructions);
 
 
-        SymbolTable paramTable=new SymbolTable(0);
+        SymbolTable paramTable=new SymbolTable(1);
         symbol.setParamTable(paramTable);
         paramTable.setLastTable(globalTable);
 
@@ -280,7 +299,9 @@ public final class Analyser {
             }
             _start.getInstructions().add(new Instruction(Operation.CALL,symbol.getStackOffset()));
         }
+        globalTable.addSymbol(symbol,name.getStartPos());
         funcTable.addSymbol(symbol,name.getStartPos());
+        System.out.println(symbol.name+" "+symbol.getParam_cnt());
         analyseBlockStatement(symbol,localTable,false,-1);
         if(type==IdentType.VOID||symbol.getInstructions().get(symbol.getInstructions().size()-1).getOpt()!=Operation.RET){
             symbol.getInstructions().add(new Instruction(Operation.RET));
@@ -314,7 +335,7 @@ public final class Analyser {
         symbol.setInitialized(true);
         symbol.setIdentType(type);
         symbol.setParam(true);
-        symbol.setParam_cnt(cur_func.getParamTable().getSymbolTable().size()+1);
+        cur_func.setParam_cnt(cur_func.getParamTable().getSymbolTable().size()+1);
 
         cur_func.getParamTable().addSymbol(symbol,name.getStartPos());
         if(nextIf(TokenType.COMMA)!=null){
@@ -328,7 +349,7 @@ public final class Analyser {
         while(check(TokenType.IF_KW)||check(TokenType.WHILE_KW)||check(TokenType.RETURN_KW)
                 ||check(TokenType.SEMICOLON)||check(TokenType.MINUS)||check(TokenType.IDENT)
                 ||check(TokenType.LET_KW)||check(TokenType.CONST_KW)
-                ||check(TokenType.CONTINUE_KW)||check(TokenType.BREAK_KW)||check(TokenType.COLON)
+                ||check(TokenType.CONTINUE_KW)||check(TokenType.BREAK_KW)
                 ||check(TokenType.L_BRACE)) {
             Instruction[] br=analyseStatement(cur_func,varTable,isWhile,startOffset);
             if(br!=null){
@@ -370,8 +391,8 @@ public final class Analyser {
             blockTable.setLastTable(varTable);
             return analyseBlockStatement(cur_func,blockTable,isWhile,-1);
         }
-        else if(check(TokenType.COLON)){
-            expect(TokenType.COLON);
+        else if(check(TokenType.SEMICOLON)){
+            expect(TokenType.SEMICOLON);
             return null;
         }
         else{
@@ -693,12 +714,12 @@ public final class Analyser {
             }
         } else if (check(TokenType.UINT_LITERAL)) {
             Token name=expect(TokenType.UINT_LITERAL);
-            cur_func.getInstructions().add(new Instruction(Operation.PUSH,(Long) name.getValue()));
+            cur_func.getInstructions().add(new Instruction(Operation.PUSH,((Integer)name.getValue()).longValue()));
             type=IdentType.INT;
 
         } else if (check(TokenType.DOUBLE_LITERAL)) {
             Token name=expect(TokenType.DOUBLE_LITERAL);
-            cur_func.getInstructions().add(new Instruction(Operation.PUSH,(Long) name.getValue()));
+            cur_func.getInstructions().add(new Instruction(Operation.PUSH,((Integer)name.getValue()).longValue()));
             type=IdentType.DOUBLE;
 
         }else if(check(TokenType.STRING_LITERAL)){

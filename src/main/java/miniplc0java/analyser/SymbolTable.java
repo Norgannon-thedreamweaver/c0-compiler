@@ -9,11 +9,15 @@ import java.util.LinkedHashMap;
 public class SymbolTable {
     private LinkedHashMap<String, SymbolEntry> symbolTable = new LinkedHashMap<>();
     private SymbolTable lastTable;
-    private int nextOffset;
+    private SymbolOffset nextOffset;
 
-    public SymbolTable(int nextOffset){
+    public SymbolTable(SymbolOffset nextOffset){
         this.lastTable=null;
-        this.nextOffset=nextOffset;
+        this.nextOffset= nextOffset;
+    }
+    public SymbolTable(Integer nextOffset){
+        this.lastTable=null;
+        this.nextOffset= new SymbolOffset(nextOffset);
     }
 
     public void addSymbol(SymbolEntry cur_func,SymbolEntry sym, Pos curPos)throws AnalyzeError {
@@ -37,8 +41,9 @@ public class SymbolTable {
     }
 
 
-    public int getNextVariableOffset() {
-        return this.nextOffset++;
+    public Integer getNextVariableOffset() {
+        SymbolOffset offset=this.getNextOffset();
+        return offset.incOffset();
     }
 
     public boolean isStart(){
@@ -65,11 +70,11 @@ public class SymbolTable {
         this.lastTable = lastTable;
     }
 
-    public int getNextOffset() {
+    public SymbolOffset getNextOffset() {
         return nextOffset;
     }
 
-    public void setNextOffset(int nextOffset) {
+    public void setNextOffset(SymbolOffset nextOffset) {
         this.nextOffset = nextOffset;
     }
 }

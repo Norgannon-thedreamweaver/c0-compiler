@@ -27,7 +27,7 @@ public class Tokenizer {
         Token ret;
 
         if (it.isEOF()) {
-            ret= new Token(TokenType.EOF, "", it.currentPos(), it.currentPos());
+            return new Token(TokenType.EOF, "", it.currentPos(), it.currentPos());
         }
 
         char peek = it.peekChar();

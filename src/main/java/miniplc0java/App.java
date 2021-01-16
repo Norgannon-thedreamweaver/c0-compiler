@@ -1,17 +1,13 @@
 package miniplc0java;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.PrintStream;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
 import miniplc0java.analyser.Analyser;
 import miniplc0java.error.CompileError;
+import miniplc0java.generator.Generator;
 import miniplc0java.instruction.Instruction;
 import miniplc0java.tokenizer.StringIter;
 import miniplc0java.tokenizer.Token;
@@ -26,7 +22,7 @@ import net.sourceforge.argparse4j.inf.ArgumentParserException;
 import net.sourceforge.argparse4j.inf.Namespace;
 
 public class App {
-    public static void main(String[] args) throws CompileError {
+    public static void main(String[] args) throws CompileError, IOException {
         var argparse = buildArgparse();
         Namespace result;
         try {
@@ -53,18 +49,14 @@ public class App {
             }
         }
 
-        PrintStream output;
-        if (outputFileName.equals("-")) {
-            output = System.out;
-        } else {
-            try {
-                output = new PrintStream(new FileOutputStream(outputFileName));
-            } catch (FileNotFoundException e) {
-                System.err.println("Cannot open output file.");
-                e.printStackTrace();
-                System.exit(2);
-                return;
-            }
+        DataOutputStream output;
+        try {
+            output = new DataOutputStream(new FileOutputStream(outputFileName));
+        } catch (FileNotFoundException e) {
+            System.err.println("Cannot open output file.");
+            e.printStackTrace();
+            System.exit(2);
+            return;
         }
 
         Scanner scanner;
@@ -78,33 +70,34 @@ public class App {
             try {
                 while (true) {
                     var token = tokenizer.nextToken();
-                    if(token.getTokenType().equals(TokenType.COMMENT))
-                        continue;
+
+                    tokens.add(token);
                     if (token.getTokenType().equals(TokenType.EOF)) {
                         break;
                     }
-                    tokens.add(token);
                 }
             } catch (Exception e) {
                 // 遇到错误不输出，直接退出
-                System.err.println(e);
+                e.printStackTrace();
                 System.exit(-1);
                 return;
             }
             for (Token token : tokens) {
-                output.println(token.toString());
+                output.writeChars(token.toString());
+                System.out.println(token.toString());
             }
-        } else if (result.getBoolean("analyse")) {
+        }
+        else if (result.getBoolean("analyse")) {
             // analyze
             var analyzer = new Analyser(tokenizer);
-            List<Instruction> instructions;
             try {
                 analyzer.analyse();
+                var generator=new Generator(output,analyzer);
+                generator.generateBin();
             } catch (Exception e) {
                 // 遇到错误不输出，直接退出
-                System.err.println(e);
+                e.printStackTrace();
                 System.exit(-2);
-                return;
             }
         } else {
             System.err.println("Please specify either '--analyse' or '--tokenize'.");
