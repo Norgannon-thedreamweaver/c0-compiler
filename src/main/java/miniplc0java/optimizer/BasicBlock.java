@@ -44,13 +44,35 @@ public class BasicBlock {
     }
     public ArrayList<Integer> jmpTo(){
         ArrayList<Integer> list=new ArrayList<>();
+        boolean ret_flag=false;
+        boolean br_flag=false;
+        int index=-1;
         for(Map.Entry<Integer, Instruction> i : instructions.entrySet()){
             Instruction ins=i.getValue();
-            if(ins.getOpt()== Operation.BR)
-                list.add((int)ins.getX()+1+i.getKey());
-            if(ins.getOpt()== Operation.BR_FALSE||ins.getOpt()== Operation.BR_TRUE)
-                list.add(1+i.getKey());
+            index=i.getKey();
+            if(ins.getOpt()== Operation.BR){
+                br_flag=true;
+                if(!list.contains((int)ins.getX()+1+index))
+                    list.add((int)ins.getX()+1+index);
+            }
+            else if(ins.getOpt()== Operation.BR_FALSE||ins.getOpt()== Operation.BR_TRUE){
+                br_flag=true;
+                if(!list.contains(1+index))
+                    list.add(1+index);
+            }
+            else if(ins.getOpt()== Operation.RET)
+                ret_flag=true;
+        }
+        if(!ret_flag && !br_flag && index!=-1){
+            list.add(1+index);
         }
         return list;
+    }
+
+    public void printInstructions(){
+        ArrayList<Integer> list=new ArrayList<>();
+        for(Map.Entry<Integer, Instruction> i : instructions.entrySet()){
+            System.out.println(i.getKey()+":"+i.getValue().toString());
+        }
     }
 }

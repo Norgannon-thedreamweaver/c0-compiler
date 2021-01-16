@@ -1,24 +1,20 @@
-fn main() -> int {
-    let a: int = getint();
-    let b: int = getint();
-    if a > 0 {
-        if b > 0 {
-            while b > 0 {
-                b = b - 1;
-                if b == 3 {
-                    return 1;
-                }
-            }
-            if a == 2 {
-                return 3;
-            }
-        } else {
-            if a == 4 {
-                return 5;
-            }
-            return 6;
+fn sqrt(n: double) -> double {
+    let l: double = 0.0;
+    let r: double = n;
+    let mid: double;
+    let mid2: double;
+    while r-l > 0.000001 {
+        mid = (l+r) / 2.0;
+        mid2 = mid*mid;
+        if (mid2 == n) {
+            return mid;
         }
-    } else {
-        return -1;
+        if (mid2 < n) {
+            l = mid;
+        }
+        else {
+            r = mid;
+        }
     }
+    return mid;
 }

@@ -26,7 +26,6 @@ public class ReturnCheck {
             }
             blocks.add(block);
         }
-
         for(BasicBlock block:blocks){
             for(Integer jmp:block.jmpTo()){
                 BasicBlock blockTo=getBlockByIndex(jmp);
