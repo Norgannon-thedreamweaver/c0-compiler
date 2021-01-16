@@ -499,6 +499,7 @@ public final class Analyser {
             IdentType type=analyseExpression(cur_func,varTable);
             cur_func.getInstructions().add(new Instruction(Operation.STORE_64));
             if(type!=cur_func.getIdentType()){
+                System.out.println("InvalidReturnType:"+type.toString()+" "+cur_func.getIdentType().toString());
                 throw new AnalyzeError(ErrorCode.InvalidReturnType,peek().getStartPos());
             }
         }
