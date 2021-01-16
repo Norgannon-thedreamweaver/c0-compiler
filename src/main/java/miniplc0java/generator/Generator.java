@@ -39,7 +39,7 @@ public class Generator {
                 output.write(((String) entry.getName()).getBytes());
             }
             else if(entry.getIdentType()== IdentType.INT||entry.getIdentType()==IdentType.DOUBLE){
-                output.write(8);
+                output.writeInt(8);
                 output.writeLong((Long) entry.getValue());
             }
             else if(entry.getIdentType()==IdentType.STRING){
