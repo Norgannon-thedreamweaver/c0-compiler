@@ -182,13 +182,15 @@ public final class Analyser {
         IdentType type;
         expect(TokenType.COLON);
 
-        if(check(TokenType.IDENT) && expect(TokenType.IDENT).getValue().toString().equals("int")){
+        Token ty=expect(TokenType.IDENT);
+        if(ty.getValue().toString().equals("int")){
             type=IdentType.INT;
         }
-        else if(check(TokenType.IDENT) && expect(TokenType.IDENT).getValue().toString().equals("double")){
+        else if(ty.getValue().toString().equals("double")){
             type=IdentType.DOUBLE;
         }
         else{
+            System.out.println("read ty:"+ty.getValue());
             throw new AnalyzeError(ErrorCode.ExpectTY, peekedToken.getStartPos());
         }
         expect(TokenType.ASSIGN);
@@ -225,7 +227,7 @@ public final class Analyser {
             type=IdentType.DOUBLE;
         }
         else{
-            System.out.println("expect ty:"+ty.getValue());
+            System.out.println("read ty:"+ty.getValue());
             throw new AnalyzeError(ErrorCode.ExpectTY, peekedToken.getStartPos());
         }
         SymbolEntry symbol=new SymbolEntry(name.getValue().toString(),0L,false,varTable.getNextVariableOffset(),SymbolType.LET,type);
@@ -722,7 +724,7 @@ public final class Analyser {
 
         } else if (check(TokenType.DOUBLE_LITERAL)) {
             Token name=expect(TokenType.DOUBLE_LITERAL);
-            cur_func.getInstructions().add(new Instruction(Operation.PUSH,((Integer)name.getValue()).longValue()));
+            cur_func.getInstructions().add(new Instruction(Operation.PUSH,((Double)name.getValue()).longValue()));
             type=IdentType.DOUBLE;
 
         }else if(check(TokenType.STRING_LITERAL)){
