@@ -184,13 +184,13 @@ public class Tokenizer {
         if(peek=='\\'){
             char escape=lexEscapeSequence();
             if(it.nextChar()=='\'')
-                return new Token(TokenType.CHAR_LITERAL, escape, start, it.currentPos());
+                return new Token(TokenType.CHAR_LITERAL, (int)escape, start, it.currentPos());
             throw new TokenizeError(ErrorCode.InvalidInput, start);
         }
         else if(peek!='\'' && peek!='\n' && peek!='\t' && peek!='\r'){
             char c=it.nextChar();
             if(it.nextChar()=='\'')
-                return new Token(TokenType.CHAR_LITERAL, c, start, it.currentPos());
+                return new Token(TokenType.CHAR_LITERAL, (int)c, start, it.currentPos());
             throw new TokenizeError(ErrorCode.InvalidInput, start);
         }
         throw new TokenizeError(ErrorCode.InvalidInput, start);

@@ -182,10 +182,10 @@ public final class Analyser {
         IdentType type;
         expect(TokenType.COLON);
 
-        if(expect(TokenType.IDENT).getValue().toString().equals("int")){
+        if(check(TokenType.IDENT) && expect(TokenType.IDENT).getValue().toString().equals("int")){
             type=IdentType.INT;
         }
-        else if(expect(TokenType.IDENT).getValue().toString().equals("double")){
+        else if(check(TokenType.IDENT) && expect(TokenType.IDENT).getValue().toString().equals("double")){
             type=IdentType.DOUBLE;
         }
         else{
