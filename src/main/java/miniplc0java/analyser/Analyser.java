@@ -302,7 +302,7 @@ public final class Analyser {
             else {
                 _start.getInstructions().add(new Instruction(Operation.STACKALLOC,1L));
             }
-            _start.getInstructions().add(new Instruction(Operation.CALL,symbol.getStackOffset()));
+            _start.getInstructions().add(new Instruction(Operation.CALLNAME,symbol.getStackOffset()));
         }
         globalTable.addSymbol(symbol,name.getStartPos());
         funcTable.addSymbol(symbol,name.getStartPos());
@@ -857,7 +857,7 @@ public final class Analyser {
                     expect(TokenType.COMMA);
             }
             expect(TokenType.R_PAREN);
-            cur_func.getInstructions().add(new Instruction(Operation.CALL,entry.getStackOffset()));
+            cur_func.getInstructions().add(new Instruction(Operation.CALLNAME,entry.getStackOffset()));
             type=entry.getIdentType();
         }
         return type;
