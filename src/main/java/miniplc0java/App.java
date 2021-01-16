@@ -78,9 +78,8 @@ public class App {
                 }
             } catch (Exception e) {
                 // 遇到错误不输出，直接退出
-                System.err.println(e);
-                //e.printStackTrace();
-                System.exit(-1);
+                e.printStackTrace();
+                System.exit(3);
                 return;
             }
             for (Token token : tokens) {
@@ -97,13 +96,12 @@ public class App {
                 generator.generateBin();
             } catch (Exception e) {
                 // 遇到错误不输出，直接退出
-                System.err.println(e);
-                //e.printStackTrace();
-                System.exit(-2);
+                e.printStackTrace();
+                System.exit(4);
             }
         } else {
             System.err.println("Please specify either '--analyse' or '--tokenize'.");
-            System.exit(-3);
+            System.exit(5);
         }
     }
 
