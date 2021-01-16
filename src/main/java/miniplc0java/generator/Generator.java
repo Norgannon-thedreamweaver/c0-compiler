@@ -81,7 +81,7 @@ public class Generator {
             ArrayList<Instruction> instructions=entry.getInstructions();
             output.writeInt(instructions.size());
             ReturnCheck returnCheck=new ReturnCheck(instructions);
-            if(!returnCheck.check())
+            if(entry.getIdentType() != IdentType.VOID && !returnCheck.check())
                 throw new AnalyzeError(ErrorCode.NotAllRoutesReturn,null);
             generateInstruction(instructions);
         }
