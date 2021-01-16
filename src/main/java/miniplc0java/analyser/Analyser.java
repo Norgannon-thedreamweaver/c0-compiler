@@ -39,6 +39,7 @@ public final class Analyser {
         funcTable.addSymbol(_start,null);
         globalTable.addSymbol(_start,null);
 
+        /*
         SymbolEntry entry;
         entry=new SymbolEntry("getint","getint",true,globalTable.getNextVariableOffset(),SymbolType.FN,IdentType.INT);
         funcTable.addSymbol(entry,null);
@@ -64,7 +65,7 @@ public final class Analyser {
         entry=new SymbolEntry("putln","putln",true,globalTable.getNextVariableOffset(),SymbolType.FN,IdentType.VOID);
         funcTable.addSymbol(entry,null);
         globalTable.addSymbol(entry,null);
-
+        */
         //System.out.println("func:"+funcTable.getNextOffset().getOffset());
         //System.out.println("global:"+globalTable.getNextOffset().getOffset());
     }
@@ -776,7 +777,7 @@ public final class Analyser {
         IdentType type=null;
         String funcName=name.getValue().toString();
         if(funcName.equals("getint")||funcName.equals("getdouble")||funcName.equals("getchar")){
-            SymbolEntry entry=funcTable.findSymbolNoRe(funcName,name.getStartPos());
+            //SymbolEntry entry=funcTable.findSymbolNoRe(funcName,name.getStartPos());
             expect(TokenType.L_PAREN);
             expect(TokenType.R_PAREN);
             //cur_func.getInstructions().add(new Instruction(Operation.STACKALLOC, 1L));
@@ -799,7 +800,7 @@ public final class Analyser {
             }
         }
         else if(funcName.equals("putint")||funcName.equals("putchar")||funcName.equals("putstr")){
-            SymbolEntry entry=funcTable.findSymbolNoRe(funcName.toString(),name.getStartPos());
+            //SymbolEntry entry=funcTable.findSymbolNoRe(funcName.toString(),name.getStartPos());
             //cur_func.getInstructions().add(new Instruction(Operation.STACKALLOC,0L));
             expect(TokenType.L_PAREN);
             IdentType ty=analyseExpression(cur_func,varTable);
@@ -818,7 +819,7 @@ public final class Analyser {
             type=IdentType.VOID;
         }
         else if(funcName.equals("putdouble")){
-            SymbolEntry entry=funcTable.findSymbolNoRe(funcName,name.getStartPos());
+            //SymbolEntry entry=funcTable.findSymbolNoRe(funcName,name.getStartPos());
             //cur_func.getInstructions().add(new Instruction(Operation.STACKALLOC,0L));
             expect(TokenType.L_PAREN);
             IdentType ty=analyseExpression(cur_func,varTable);
@@ -831,7 +832,7 @@ public final class Analyser {
             type=IdentType.VOID;
         }
         else if(funcName.equals("putln")){
-            SymbolEntry entry=funcTable.findSymbolNoRe(funcName,name.getStartPos());
+            //SymbolEntry entry=funcTable.findSymbolNoRe(funcName,name.getStartPos());
             expect(TokenType.L_PAREN);
             expect(TokenType.R_PAREN);
             //cur_func.getInstructions().add(new Instruction(Operation.STACKALLOC, 0L));
