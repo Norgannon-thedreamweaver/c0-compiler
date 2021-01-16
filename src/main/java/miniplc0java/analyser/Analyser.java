@@ -217,13 +217,15 @@ public final class Analyser {
         IdentType type;
         expect(TokenType.COLON);
 
-        if(check(TokenType.IDENT) && expect(TokenType.IDENT).getValue().toString().equals("int")){
+        Token ty=expect(TokenType.IDENT);
+        if(ty.getValue().toString().equals("int")){
             type=IdentType.INT;
         }
-        else if(check(TokenType.IDENT) && expect(TokenType.IDENT).getValue().toString().equals("double")){
+        else if(ty.getValue().toString().equals("double")){
             type=IdentType.DOUBLE;
         }
         else{
+            System.out.println("expect ty:"+ty.getValue());
             throw new AnalyzeError(ErrorCode.ExpectTY, peekedToken.getStartPos());
         }
         SymbolEntry symbol=new SymbolEntry(name.getValue().toString(),0L,false,varTable.getNextVariableOffset(),SymbolType.LET,type);
