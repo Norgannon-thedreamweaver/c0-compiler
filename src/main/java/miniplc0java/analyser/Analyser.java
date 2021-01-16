@@ -308,9 +308,9 @@ public final class Analyser {
         globalTable.addSymbol(symbol,name.getStartPos());
         funcTable.addSymbol(symbol,name.getStartPos());
         analyseBlockStatement(symbol,localTable,false,-1);
-        if(type==IdentType.VOID||symbol.getInstructions().get(symbol.getInstructions().size()-1).getOpt()!=Operation.RET){
+        /*if(type==IdentType.VOID||symbol.getInstructions().get(symbol.getInstructions().size()-1).getOpt()!=Operation.RET){
             symbol.getInstructions().add(new Instruction(Operation.RET));
-        }
+        }*/
     }
 
     private void analyseParamList(SymbolEntry cur_func) throws CompileError{

@@ -1,7 +1,10 @@
 package miniplc0java.generator;
 
 import miniplc0java.analyser.*;
+import miniplc0java.error.AnalyzeError;
+import miniplc0java.error.ErrorCode;
 import miniplc0java.instruction.Instruction;
+import miniplc0java.optimizer.ReturnCheck;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -20,7 +23,7 @@ public class Generator {
         this.analyser=analyser;
     }
 
-    public void generateBin() throws IOException{
+    public void generateBin() throws IOException, AnalyzeError {
         output.writeInt(this.magic);
         output.writeInt(this.version);
         generateGlobals();
@@ -50,7 +53,7 @@ public class Generator {
         }
     }
 
-    private void generateFunctions() throws IOException{
+    private void generateFunctions() throws IOException, AnalyzeError {
         int count=analyser.funcTable.getSize();
         output.writeInt(count);
         System.out.println("function size:"+count);
@@ -77,6 +80,9 @@ public class Generator {
 
             ArrayList<Instruction> instructions=entry.getInstructions();
             output.writeInt(instructions.size());
+            ReturnCheck returnCheck=new ReturnCheck(instructions);
+            if(!returnCheck.check())
+                throw new AnalyzeError(ErrorCode.NotAllRoutesReturn,null);
             generateInstruction(instructions);
         }
     }
