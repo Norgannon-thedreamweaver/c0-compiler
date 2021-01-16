@@ -59,7 +59,7 @@ public class Generator {
         for(SymbolEntry entry : table.values()) {
             if(stdlib.contains(entry.getName()))
                 continue;
-            System.out.print("fn "+entry.getName()+" "+entry.getIdentType());
+            System.out.print("fn "+entry.getName()+" "+entry.getStackOffset()+" "+entry.getIdentType());
             output.writeInt((int) entry.getStackOffset());
             if(entry.getIdentType() == IdentType.VOID){
                 output.writeInt(0);
