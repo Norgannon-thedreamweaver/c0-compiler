@@ -719,12 +719,12 @@ public final class Analyser {
             }
         } else if (check(TokenType.UINT_LITERAL)) {
             Token name=expect(TokenType.UINT_LITERAL);
-            cur_func.getInstructions().add(new Instruction(Operation.PUSH,((Integer)name.getValue()).longValue()));
+            cur_func.getInstructions().add(new Instruction(Operation.PUSH,(Long) name.getValue()));
             type=IdentType.INT;
 
         } else if (check(TokenType.DOUBLE_LITERAL)) {
             Token name=expect(TokenType.DOUBLE_LITERAL);
-            cur_func.getInstructions().add(new Instruction(Operation.PUSH,((Double)name.getValue()).longValue()));
+            cur_func.getInstructions().add(new Instruction(Operation.PUSH,(Long) name.getValue()));
             type=IdentType.DOUBLE;
 
         }else if(check(TokenType.STRING_LITERAL)){
@@ -737,7 +737,7 @@ public final class Analyser {
         }
         else if(check(TokenType.CHAR_LITERAL)){
             Token name=expect(TokenType.CHAR_LITERAL);
-            cur_func.getInstructions().add(new Instruction(Operation.PUSH,((Integer)name.getValue()).longValue()));
+            cur_func.getInstructions().add(new Instruction(Operation.PUSH,(Long) name.getValue()));
             type=IdentType.INT;
         }
         else if (check(TokenType.L_PAREN)) {

@@ -98,12 +98,12 @@ public class Tokenizer {
                     peek = it.peekChar();
                 }
                 String str= numberPart.toString()+"."+floatPart.toString()+"e"+signPart+exponentPart.toString();
-                double d = Double.parseDouble(str);
+                long d = Double.doubleToLongBits(Double.parseDouble(str));
                 return new Token(TokenType.DOUBLE_LITERAL,d,start,it.currentPos());
             }
             else{
                 String str= numberPart.toString()+"."+floatPart.toString();
-                double d = Double.parseDouble(str);
+                long d = Double.doubleToLongBits(Double.parseDouble(str));
                 return new Token(TokenType.DOUBLE_LITERAL,d,start,it.currentPos());
             }
         }
@@ -128,11 +128,11 @@ public class Tokenizer {
                 peek = it.peekChar();
             }
             String str= numberPart.toString()+"e"+signPart+exponentPart.toString();
-            double d = Double.parseDouble(str);
+            long d = Double.doubleToLongBits(Double.parseDouble(str));
             return new Token(TokenType.DOUBLE_LITERAL,d,start,it.currentPos());
         }
         else{
-            int i = Integer.parseInt(numberPart.toString());
+            Long i = Long.valueOf(numberPart.toString());
             return new Token(TokenType.UINT_LITERAL,i,start,it.currentPos());
         }
     }
@@ -184,13 +184,13 @@ public class Tokenizer {
         if(peek=='\\'){
             char escape=lexEscapeSequence();
             if(it.nextChar()=='\'')
-                return new Token(TokenType.CHAR_LITERAL, Integer.valueOf(escape), start, it.currentPos());
+                return new Token(TokenType.CHAR_LITERAL, (long)escape, start, it.currentPos());
             throw new TokenizeError(ErrorCode.InvalidInput, start);
         }
         else if(peek!='\'' && peek!='\n' && peek!='\t' && peek!='\r'){
             char c=it.nextChar();
             if(it.nextChar()=='\'')
-                return new Token(TokenType.CHAR_LITERAL, Integer.valueOf(c), start, it.currentPos());
+                return new Token(TokenType.CHAR_LITERAL, (long)c, start, it.currentPos());
             throw new TokenizeError(ErrorCode.InvalidInput, start);
         }
         throw new TokenizeError(ErrorCode.InvalidInput, start);
