@@ -124,15 +124,15 @@ public class Tokenizer {
             if(!Character.isDigit(peek))
                 throw new TokenizeError(ErrorCode.InvalidInput, start);
             while(Character.isDigit(peek)){//一直读数字
-                floatPart.append(it.nextChar());
+                exponentPart.append(it.nextChar());
                 peek = it.peekChar();
             }
-            String str= numberPart.toString()+"."+floatPart.toString()+"e"+signPart+exponentPart.toString();
+            String str= numberPart.toString()+"e"+signPart+exponentPart.toString();
             double d = Double.parseDouble(str);
             return new Token(TokenType.DOUBLE_LITERAL,d,start,it.currentPos());
         }
         else{
-            Integer i = Integer.valueOf(numberPart.toString());
+            int i = Integer.parseInt(numberPart.toString());
             return new Token(TokenType.UINT_LITERAL,i,start,it.currentPos());
         }
     }
@@ -184,13 +184,13 @@ public class Tokenizer {
         if(peek=='\\'){
             char escape=lexEscapeSequence();
             if(it.nextChar()=='\'')
-                return new Token(TokenType.CHAR_LITERAL, (int)escape, start, it.currentPos());
+                return new Token(TokenType.CHAR_LITERAL, Integer.valueOf(escape), start, it.currentPos());
             throw new TokenizeError(ErrorCode.InvalidInput, start);
         }
         else if(peek!='\'' && peek!='\n' && peek!='\t' && peek!='\r'){
             char c=it.nextChar();
             if(it.nextChar()=='\'')
-                return new Token(TokenType.CHAR_LITERAL, (int)c, start, it.currentPos());
+                return new Token(TokenType.CHAR_LITERAL, Integer.valueOf(c), start, it.currentPos());
             throw new TokenizeError(ErrorCode.InvalidInput, start);
         }
         throw new TokenizeError(ErrorCode.InvalidInput, start);
