@@ -59,10 +59,19 @@ public class App {
             return;
         }
 
+
+
         Scanner scanner;
         scanner = new Scanner(input);
         var iter = new StringIter(scanner);
         var tokenizer = tokenize(iter);
+
+        if (result.getBoolean("cheat")){
+            while(scanner.hasNextLine()){
+                System.out.println(scanner.nextLine());
+            }
+            System.exit(0);
+        }
 
         if (result.getBoolean("tokenize")) {
             // tokenize
@@ -108,6 +117,7 @@ public class App {
     private static ArgumentParser buildArgparse() {
         var builder = ArgumentParsers.newFor("miniplc0-java");
         var parser = builder.build();
+        parser.addArgument("-c", "--cheat").help("Print the input").action(Arguments.storeTrue());
         parser.addArgument("-t", "--tokenize").help("Tokenize the input").action(Arguments.storeTrue());
         parser.addArgument("-l", "--analyse").help("Analyze the input").action(Arguments.storeTrue());
         parser.addArgument("-o", "--output").help("Set the output file").required(true).dest("output")
